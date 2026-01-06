@@ -16,7 +16,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutReportsRouteImport } from './routes/_layout/reports'
+import { Route as LayoutPrescriptionsRouteImport } from './routes/_layout/prescriptions'
+import { Route as LayoutPatientsRouteImport } from './routes/_layout/patients'
+import { Route as LayoutMedicinesRouteImport } from './routes/_layout/medicines'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
+import { Route as LayoutFollowupsRouteImport } from './routes/_layout/followups'
+import { Route as LayoutAppointmentsRouteImport } from './routes/_layout/appointments'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
 const SignupRoute = SignupRouteImport.update({
@@ -53,9 +59,39 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutReportsRoute = LayoutReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutPrescriptionsRoute = LayoutPrescriptionsRouteImport.update({
+  id: '/prescriptions',
+  path: '/prescriptions',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutPatientsRoute = LayoutPatientsRouteImport.update({
+  id: '/patients',
+  path: '/patients',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutMedicinesRoute = LayoutMedicinesRouteImport.update({
+  id: '/medicines',
+  path: '/medicines',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutItemsRoute = LayoutItemsRouteImport.update({
   id: '/items',
   path: '/items',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutFollowupsRoute = LayoutFollowupsRouteImport.update({
+  id: '/followups',
+  path: '/followups',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAppointmentsRoute = LayoutAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
@@ -70,7 +106,13 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/appointments': typeof LayoutAppointmentsRoute
+  '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
+  '/medicines': typeof LayoutMedicinesRoute
+  '/patients': typeof LayoutPatientsRoute
+  '/prescriptions': typeof LayoutPrescriptionsRoute
+  '/reports': typeof LayoutReportsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
 }
@@ -80,7 +122,13 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/appointments': typeof LayoutAppointmentsRoute
+  '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
+  '/medicines': typeof LayoutMedicinesRoute
+  '/patients': typeof LayoutPatientsRoute
+  '/prescriptions': typeof LayoutPrescriptionsRoute
+  '/reports': typeof LayoutReportsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
 }
@@ -92,7 +140,13 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/appointments': typeof LayoutAppointmentsRoute
+  '/_layout/followups': typeof LayoutFollowupsRoute
   '/_layout/items': typeof LayoutItemsRoute
+  '/_layout/medicines': typeof LayoutMedicinesRoute
+  '/_layout/patients': typeof LayoutPatientsRoute
+  '/_layout/prescriptions': typeof LayoutPrescriptionsRoute
+  '/_layout/reports': typeof LayoutReportsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
 }
@@ -104,7 +158,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/appointments'
+    | '/followups'
     | '/items'
+    | '/medicines'
+    | '/patients'
+    | '/prescriptions'
+    | '/reports'
     | '/settings'
     | '/'
   fileRoutesByTo: FileRoutesByTo
@@ -114,7 +174,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/appointments'
+    | '/followups'
     | '/items'
+    | '/medicines'
+    | '/patients'
+    | '/prescriptions'
+    | '/reports'
     | '/settings'
     | '/'
   id:
@@ -125,7 +191,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
+    | '/_layout/appointments'
+    | '/_layout/followups'
     | '/_layout/items'
+    | '/_layout/medicines'
+    | '/_layout/patients'
+    | '/_layout/prescriptions'
+    | '/_layout/reports'
     | '/_layout/settings'
     | '/_layout/'
   fileRoutesById: FileRoutesById
@@ -189,11 +261,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/reports': {
+      id: '/_layout/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof LayoutReportsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/prescriptions': {
+      id: '/_layout/prescriptions'
+      path: '/prescriptions'
+      fullPath: '/prescriptions'
+      preLoaderRoute: typeof LayoutPrescriptionsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/patients': {
+      id: '/_layout/patients'
+      path: '/patients'
+      fullPath: '/patients'
+      preLoaderRoute: typeof LayoutPatientsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/medicines': {
+      id: '/_layout/medicines'
+      path: '/medicines'
+      fullPath: '/medicines'
+      preLoaderRoute: typeof LayoutMedicinesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/items': {
       id: '/_layout/items'
       path: '/items'
       fullPath: '/items'
       preLoaderRoute: typeof LayoutItemsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/followups': {
+      id: '/_layout/followups'
+      path: '/followups'
+      fullPath: '/followups'
+      preLoaderRoute: typeof LayoutFollowupsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/appointments': {
+      id: '/_layout/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof LayoutAppointmentsRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin': {
@@ -208,14 +322,26 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutAppointmentsRoute: typeof LayoutAppointmentsRoute
+  LayoutFollowupsRoute: typeof LayoutFollowupsRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
+  LayoutMedicinesRoute: typeof LayoutMedicinesRoute
+  LayoutPatientsRoute: typeof LayoutPatientsRoute
+  LayoutPrescriptionsRoute: typeof LayoutPrescriptionsRoute
+  LayoutReportsRoute: typeof LayoutReportsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutAppointmentsRoute: LayoutAppointmentsRoute,
+  LayoutFollowupsRoute: LayoutFollowupsRoute,
   LayoutItemsRoute: LayoutItemsRoute,
+  LayoutMedicinesRoute: LayoutMedicinesRoute,
+  LayoutPatientsRoute: LayoutPatientsRoute,
+  LayoutPrescriptionsRoute: LayoutPrescriptionsRoute,
+  LayoutReportsRoute: LayoutReportsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }

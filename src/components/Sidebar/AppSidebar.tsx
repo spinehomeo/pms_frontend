@@ -1,4 +1,4 @@
-import { Briefcase, Home, Users } from "lucide-react"
+import { Briefcase, Home, Users, UserCircle, Calendar, Pill, FileText, RotateCcw, ClipboardList } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -20,9 +20,26 @@ const baseItems: Item[] = [
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
-  const items = currentUser?.is_superuser
-    ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
-    : baseItems
+  let items = [...baseItems]
+
+  // Add doctor-specific items (show for doctors or superusers)
+  // Check role field if available, or show for superusers who should have access
+  const isDoctor = (currentUser as any)?.role === "doctor" || (currentUser as any)?.is_doctor === true
+  if (isDoctor || currentUser?.is_superuser) {
+    items.push(
+      { icon: UserCircle, title: "Patients", path: "/patients" },
+      { icon: Calendar, title: "Appointments", path: "/appointments" },
+      { icon: ClipboardList, title: "Prescriptions", path: "/prescriptions" },
+      { icon: Pill, title: "Medicines", path: "/medicines" },
+      { icon: FileText, title: "Reports", path: "/reports" },
+      { icon: RotateCcw, title: "Followups", path: "/followups" }
+    )
+  }
+
+  // Add admin items
+  if (currentUser?.is_superuser) {
+    items.push({ icon: Users, title: "Admin", path: "/admin" })
+  }
 
   return (
     <Sidebar collapsible="icon">
