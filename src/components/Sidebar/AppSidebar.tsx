@@ -1,4 +1,4 @@
-import { Briefcase, Home, Users, UserCircle, Calendar, Pill, FileText, RotateCcw, ClipboardList } from "lucide-react"
+import { Home, Users, UserCircle, Calendar, Pill, FileText, RotateCcw, ClipboardList, FolderOpen } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -14,7 +14,6 @@ import { User } from "./User"
 
 const baseItems: Item[] = [
   { icon: Home, title: "Dashboard", path: "/" },
-  { icon: Briefcase, title: "Items", path: "/items" },
 ]
 
 export function AppSidebar() {
@@ -29,6 +28,7 @@ export function AppSidebar() {
     items.push(
       { icon: UserCircle, title: "Patients", path: "/patients" },
       { icon: Calendar, title: "Appointments", path: "/appointments" },
+      { icon: FolderOpen, title: "Cases", path: "/cases" },
       { icon: ClipboardList, title: "Prescriptions", path: "/prescriptions" },
       { icon: Pill, title: "Medicines", path: "/medicines" },
       { icon: FileText, title: "Reports", path: "/reports" },

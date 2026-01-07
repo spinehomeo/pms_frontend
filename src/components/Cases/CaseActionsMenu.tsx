@@ -1,22 +1,22 @@
 import { EllipsisVertical } from "lucide-react"
 import { useState } from "react"
 
-import type { PatientPublic } from "@/client/PatientsService"
+import type { PatientCasePublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import DeletePatient from "../Patients/DeletePatient"
-import EditPatient from "../Patients/EditPatient"
-import ViewPatient from "../Patients/ViewPatient"
+import DeleteCase from "./DeleteCase"
+import EditCase from "./EditCase"
+import ViewCase from "./ViewCase"
 
-interface PatientActionsMenuProps {
-  patient: PatientPublic
+interface CaseActionsMenuProps {
+  case: PatientCasePublic
 }
 
-export const PatientActionsMenu = ({ patient }: PatientActionsMenuProps) => {
+export const CaseActionsMenu = ({ case: caseItem }: CaseActionsMenuProps) => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -27,9 +27,9 @@ export const PatientActionsMenu = ({ patient }: PatientActionsMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <ViewPatient patient={patient} />
-        <EditPatient patient={patient} onSuccess={() => setOpen(false)} />
-        <DeletePatient id={patient.id} onSuccess={() => setOpen(false)} />
+        <ViewCase caseItem={caseItem} />
+        <EditCase caseItem={caseItem} onSuccess={() => setOpen(false)} />
+        <DeleteCase id={caseItem.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
     </DropdownMenu>
   )

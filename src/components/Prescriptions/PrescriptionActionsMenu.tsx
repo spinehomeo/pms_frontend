@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import DeletePrescription from "../Prescriptions/DeletePrescription"
 import EditPrescription from "../Prescriptions/EditPrescription"
+import ViewPrescription from "../Prescriptions/ViewPrescription"
 
 interface PrescriptionActionsMenuProps {
   prescription: PrescriptionPublic
@@ -26,6 +27,7 @@ export const PrescriptionActionsMenu = ({ prescription }: PrescriptionActionsMen
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <ViewPrescription prescription={prescription} />
         <EditPrescription prescription={prescription} onSuccess={() => setOpen(false)} />
         <DeletePrescription id={prescription.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>

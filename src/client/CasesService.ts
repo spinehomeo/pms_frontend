@@ -54,7 +54,7 @@ export interface CasesCreateCaseData {
 
 export interface CasesUpdateCaseData {
   caseId: string;
-  requestBody: CaseUpdate;
+  requestBody: CaseCreate; // Backend expects CaseCreate, not CaseUpdate
 }
 
 export interface CasesDeleteCaseData {

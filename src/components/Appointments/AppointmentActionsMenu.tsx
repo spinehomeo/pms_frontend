@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import DeleteAppointment from "../Appointments/DeleteAppointment"
 import EditAppointment from "../Appointments/EditAppointment"
+import ViewAppointment from "../Appointments/ViewAppointment"
 
 interface AppointmentActionsMenuProps {
   appointment: AppointmentPublic
@@ -26,6 +27,7 @@ export const AppointmentActionsMenu = ({ appointment }: AppointmentActionsMenuPr
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <ViewAppointment appointment={appointment} />
         <EditAppointment appointment={appointment} onSuccess={() => setOpen(false)} />
         <DeleteAppointment id={appointment.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
