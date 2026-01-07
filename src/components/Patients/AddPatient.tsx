@@ -42,9 +42,7 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   full_name: z.string().min(1, { message: "Full name is required" }),
   date_of_birth: z.string().optional(),
-  gender: z.enum(["male", "female", "other", "child"], {
-    required_error: "Gender is required",
-  }),
+  gender: z.enum(["male", "female", "other", "child"]),
   phone: z.string().optional(),
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
   address: z.string().optional(),

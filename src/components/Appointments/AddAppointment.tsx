@@ -43,9 +43,9 @@ const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),
   appointment_date: z.string().min(1, { message: "Date is required" }),
   appointment_time: z.string().min(1, { message: "Time is required" }),
-  duration_minutes: z.number().min(15).max(480).default(30),
-  status: z.enum(["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"]).default("scheduled"),
-  consultation_type: z.string().default("first"),
+  duration_minutes: z.number().min(15).max(480),
+  status: z.enum(["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"]),
+  consultation_type: z.string(),
   reason: z.string().optional(),
   notes: z.string().optional(),
 })

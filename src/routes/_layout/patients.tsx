@@ -4,7 +4,6 @@ import { Search } from "lucide-react"
 import { Suspense } from "react"
 
 import { PatientsService } from "@/client"
-import type { PatientsPublic } from "@/client/PatientsService"
 import { DataTable } from "@/components/Common/DataTable"
 import AddPatient from "@/components/Patients/AddPatient"
 import { columns } from "@/components/Patients/columns"

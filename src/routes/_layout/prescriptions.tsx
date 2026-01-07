@@ -4,7 +4,6 @@ import { Search } from "lucide-react"
 import { Suspense } from "react"
 
 import { PrescriptionsService } from "@/client"
-import { DataTable } from "@/components/Common/DataTable"
 import { Skeleton } from "@/components/ui/skeleton"
 
 function getPrescriptionsQueryOptions() {
