@@ -21,10 +21,9 @@ export function AppSidebar() {
 
   let items = [...baseItems]
 
-  // Add doctor-specific items (show for doctors or superusers)
-  // Check role field if available, or show for superusers who should have access
+  // Add doctor-specific items (only show for doctors, not superusers unless they are also doctors)
   const isDoctor = (currentUser as any)?.role === "doctor" || (currentUser as any)?.is_doctor === true
-  if (isDoctor || currentUser?.is_superuser) {
+  if (isDoctor) {
     items.push(
       { icon: UserCircle, title: "Patients", path: "/patients" },
       { icon: Calendar, title: "Appointments", path: "/appointments" },
