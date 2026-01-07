@@ -4,7 +4,10 @@ import { Search } from "lucide-react"
 import { Suspense } from "react"
 
 import { PrescriptionsService } from "@/client"
-import { Skeleton } from "@/components/ui/skeleton"
+import { DataTable } from "@/components/Common/DataTable"
+import AddPrescription from "@/components/Prescriptions/AddPrescription"
+import { columns } from "@/components/Prescriptions/columns"
+import PendingPrescriptions from "@/components/Pending/PendingPrescriptions"
 
 function getPrescriptionsQueryOptions() {
   return {
@@ -39,21 +42,12 @@ function PrescriptionsTableContent() {
     )
   }
 
-  // Simple table for now - can be enhanced with proper columns later
-  return (
-    <div className="rounded-md border">
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">
-          {prescriptions.count} prescription(s) found. Full table implementation coming soon.
-        </p>
-      </div>
-    </div>
-  )
+  return <DataTable columns={columns} data={prescriptions.data} />
 }
 
 function PrescriptionsTable() {
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<PendingPrescriptions />}>
       <PrescriptionsTableContent />
     </Suspense>
   )
@@ -67,6 +61,7 @@ function Prescriptions() {
           <h1 className="text-2xl font-bold tracking-tight">Prescriptions</h1>
           <p className="text-muted-foreground">Manage patient prescriptions</p>
         </div>
+        <AddPrescription />
       </div>
       <PrescriptionsTable />
     </div>

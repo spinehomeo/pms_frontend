@@ -4,7 +4,10 @@ import { Search } from "lucide-react"
 import { Suspense } from "react"
 
 import { MedicinesService } from "@/client"
-import { Skeleton } from "@/components/ui/skeleton"
+import { DataTable } from "@/components/Common/DataTable"
+import AddMedicine from "@/components/Medicines/AddMedicine"
+import { columns } from "@/components/Medicines/columns"
+import PendingMedicines from "@/components/Pending/PendingMedicines"
 
 function getMedicinesStockQueryOptions() {
   return {
@@ -39,20 +42,12 @@ function MedicinesTableContent() {
     )
   }
 
-  return (
-    <div className="rounded-md border">
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">
-          {stock.count} medicine(s) in stock. Full table implementation coming soon.
-        </p>
-      </div>
-    </div>
-  )
+  return <DataTable columns={columns} data={stock.data} />
 }
 
 function MedicinesTable() {
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<PendingMedicines />}>
       <MedicinesTableContent />
     </Suspense>
   )
@@ -66,9 +61,9 @@ function Medicines() {
           <h1 className="text-2xl font-bold tracking-tight">Medicines</h1>
           <p className="text-muted-foreground">Manage medicine stock and inventory</p>
         </div>
+        <AddMedicine />
       </div>
       <MedicinesTable />
     </div>
   )
 }
-

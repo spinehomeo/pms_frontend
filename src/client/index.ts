@@ -7,7 +7,8 @@ export * from './types.gen';
 // Temporary exports until SDK is regenerated
 export { PatientsService, type PatientPublic, type PatientsPublic, type PatientCreate, type PatientUpdate } from './PatientsService';
 export { AppointmentsService, type AppointmentPublic, type AppointmentsPublic, type AppointmentCreate, type AppointmentUpdate, type AppointmentStatus } from './AppointmentsService';
-export { PrescriptionsService, type PrescriptionPublic, type PrescriptionsPublic, type PrescriptionCreate, type PrescriptionUpdate, type PrescriptionType } from './PrescriptionsService';
+export { CasesService, type PatientCasePublic, type CasesPublic, type CaseCreate, type CaseUpdate } from './CasesService';
+export { PrescriptionsService, type PrescriptionPublic, type PrescriptionsPublic, type PrescriptionCreate, type PrescriptionUpdate, type PrescriptionType, type PrescriptionMedicineCreate } from './PrescriptionsService';
 export { MedicinesService, type MedicineMasterPublic, type DoctorMedicineStockPublic, type MedicinesPublic, type MedicinesStockPublic, type DoctorMedicineStockCreate, type DoctorMedicineStockUpdate } from './MedicinesService';
 export { FollowupsService, type FollowUpPublic, type FollowUpsPublic, type FollowUpCreate, type FollowUpUpdate } from './FollowupsService';
 export { ReportsService } from './ReportsService';

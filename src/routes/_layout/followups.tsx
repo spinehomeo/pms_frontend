@@ -4,7 +4,10 @@ import { Search } from "lucide-react"
 import { Suspense } from "react"
 
 import { FollowupsService } from "@/client"
-import { Skeleton } from "@/components/ui/skeleton"
+import { DataTable } from "@/components/Common/DataTable"
+import AddFollowup from "@/components/Followups/AddFollowup"
+import { columns } from "@/components/Followups/columns"
+import PendingFollowups from "@/components/Pending/PendingFollowups"
 
 function getFollowupsQueryOptions() {
   return {
@@ -34,25 +37,17 @@ function FollowupsTableContent() {
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold">You don't have any follow-ups yet</h3>
-        <p className="text-muted-foreground">Follow-ups will appear here</p>
+        <p className="text-muted-foreground">Add a follow-up to get started</p>
       </div>
     )
   }
 
-  return (
-    <div className="rounded-md border">
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">
-          {followups.count} follow-up(s) found. Full table implementation coming soon.
-        </p>
-      </div>
-    </div>
-  )
+  return <DataTable columns={columns} data={followups.data} />
 }
 
 function FollowupsTable() {
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<PendingFollowups />}>
       <FollowupsTableContent />
     </Suspense>
   )
@@ -66,6 +61,7 @@ function Followups() {
           <h1 className="text-2xl font-bold tracking-tight">Follow-ups</h1>
           <p className="text-muted-foreground">Manage patient follow-ups</p>
         </div>
+        <AddFollowup />
       </div>
       <FollowupsTable />
     </div>
