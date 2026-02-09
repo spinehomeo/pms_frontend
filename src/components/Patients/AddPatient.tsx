@@ -45,13 +45,14 @@ const formSchema = z.object({
   gender: z.enum(["male", "female", "other", "child"]),
   phone: z.string().optional(),
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
-  address: z.string().optional(),
+  cnic: z.string().optional().or(z.literal("")),  // Added - National ID
+  residential_address: z.string().optional().or(z.literal("")),  // Updated from "address"
+  city: z.string().optional().or(z.literal("")),  // Added
   occupation: z.string().optional(),
-  referred_by: z.string().optional(),
+  payment_status: z.boolean().optional(),  // Added - Business critical field
   medical_history: z.string().optional(),
   drug_allergies: z.string().optional(),
   family_history: z.string().optional(),
-  notes: z.string().optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -71,13 +72,14 @@ const AddPatient = () => {
       gender: "male",
       phone: "",
       email: "",
-      address: "",
+      cnic: "",
+      residential_address: "",
+      city: "",
       occupation: "",
-      referred_by: "",
+      payment_status: false,
       medical_history: "",
       drug_allergies: "",
       family_history: "",
-      notes: "",
     },
   })
 
@@ -102,13 +104,14 @@ const AddPatient = () => {
       date_of_birth: data.date_of_birth || undefined,
       phone: data.phone || undefined,
       email: data.email || undefined,
-      address: data.address || undefined,
+      cnic: data.cnic || undefined,
+      residential_address: data.residential_address || undefined,
+      city: data.city || undefined,
       occupation: data.occupation || undefined,
-      referred_by: data.referred_by || undefined,
+      payment_status: data.payment_status || undefined,
       medical_history: data.medical_history || undefined,
       drug_allergies: data.drug_allergies || undefined,
       family_history: data.family_history || undefined,
-      notes: data.notes || undefined,
     }
     mutation.mutate(patientData)
   }
@@ -241,21 +244,59 @@ const AddPatient = () => {
 
               <FormField
                 control={form.control}
-                name="address"
+                name="cnic"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>CNIC (National ID)</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Address"
+                      <Input
+                        placeholder="12345-6789012-3"
+                        type="text"
                         {...field}
-                        rows={2}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="residential_address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Residential Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Address"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Lahore, Karachi"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -278,17 +319,24 @@ const AddPatient = () => {
 
                 <FormField
                   control={form.control}
-                  name="referred_by"
+                  name="payment_status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Referred By</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Referred By"
-                          type="text"
-                          {...field}
-                        />
-                      </FormControl>
+                      <FormLabel>Payment Status</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value === "true")}
+                        defaultValue={field.value ? "true" : "false"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select payment status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="true">Paid</SelectItem>
+                          <SelectItem value="false">Unpaid</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

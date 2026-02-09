@@ -1225,12 +1225,19 @@
   dependencies:
     "@tanstack/query-core" "5.90.16"
 
-"@tanstack/react-router-devtools@1.144.0", "@tanstack/react-router-devtools@^1.139.12":
+"@tanstack/react-router-devtools@1.144.0":
   version "1.144.0"
   resolved "https://registry.yarnpkg.com/@tanstack/react-router-devtools/-/react-router-devtools-1.144.0.tgz#e7758bb093cc46a77c934a6b50b7e50bdf737394"
   integrity sha512-nstjZvZbOM4U0/Hzi82rtsP1DsR2tfigBidK+WuaDRVVstBsnwVor3DQXTGY5CcfgIiMI3eKzI17VOy3SQDDoQ==
   dependencies:
     "@tanstack/router-devtools-core" "1.144.0"
+
+"@tanstack/react-router-devtools@^1.140.0":
+  version "1.154.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router-devtools/-/react-router-devtools-1.154.1.tgz#00060a1fe2aa78a4cf3feb6213886621f750d02f"
+  integrity sha512-hF0iHhqVgMEQbwDSkZVVSoqgC48NOMoyIx50HSJQtzjoyKTmZcm9QenOxfkrr69sFCL9SX/r7K+kRVYL14slGA==
+  dependencies:
+    "@tanstack/router-devtools-core" "1.154.1"
 
 "@tanstack/react-router@^1.131.50":
   version "1.144.0"
@@ -1276,6 +1283,15 @@
   version "1.144.0"
   resolved "https://registry.yarnpkg.com/@tanstack/router-devtools-core/-/router-devtools-core-1.144.0.tgz#fadf41e71320c66ef050a083d11d4941ecf2647a"
   integrity sha512-rbpQn1aHUtcfY3U3SyJqOZRqDu0a2uPK+TE2CH50HieJApmCuNKj5RsjVQYHgwiFFvR0w0LUmueTnl2X2hiWTg==
+  dependencies:
+    clsx "^2.1.1"
+    goober "^2.1.16"
+    tiny-invariant "^1.3.3"
+
+"@tanstack/router-devtools-core@1.154.1":
+  version "1.154.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-devtools-core/-/router-devtools-core-1.154.1.tgz#594f74e2fe38dfe6b14b22217ee8c4eb109f772a"
+  integrity sha512-Mt/tTEs60bhrf34A3cJMPT7wQz72yQ0RdFNqpPnyIWv5c7jmraTpi5GcKIc/MIpjtrMUldsav8nxs9dSMpw+TQ==
   dependencies:
     clsx "^2.1.1"
     goober "^2.1.16"
@@ -1611,7 +1627,7 @@ cookie-es@^2.0.0:
   resolved "https://registry.yarnpkg.com/cookie-es/-/cookie-es-2.0.0.tgz#ca6163d7ef8686ea6bbdd551f1de575569c1ed69"
   integrity sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==
 
-csstype@^3.2.2:
+csstype@^3.0.10, csstype@^3.2.2:
   version "3.2.3"
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.2.3.tgz#ec48c0f3e993e50648c86da559e2610995cf989a"
   integrity sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==

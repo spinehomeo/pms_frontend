@@ -34,14 +34,16 @@ function PatientsTableContent() {
 
   const filteredPatients = useMemo(() => {
     if (!searchQuery.trim()) return patients.data
-    
+
     const query = searchQuery.toLowerCase()
     return patients.data.filter((patient) => {
       return (
         patient.full_name?.toLowerCase().includes(query) ||
         patient.email?.toLowerCase().includes(query) ||
         patient.phone?.toLowerCase().includes(query) ||
-        patient.address?.toLowerCase().includes(query)
+        patient.residential_address?.toLowerCase().includes(query) ||
+        patient.city?.toLowerCase().includes(query) ||
+        patient.cnic?.toLowerCase().includes(query)
       )
     })
   }, [patients.data, searchQuery])
