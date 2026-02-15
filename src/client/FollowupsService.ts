@@ -1,7 +1,7 @@
 // Temporary FollowupsService until SDK is regenerated
-import type { CancelablePromise } from './core/CancelablePromise';
-import { OpenAPI } from './core/OpenAPI';
-import { request as __request } from './core/request';
+import type { CancelablePromise } from "./core/CancelablePromise";
+import { OpenAPI } from "./core/OpenAPI";
+import { request as __request } from "./core/request";
 
 export interface FollowupsReadFollowupsData {
   skip?: number;
@@ -78,11 +78,64 @@ export interface FollowUpsPublic {
   count: number;
 }
 
+export interface CaseFollowupsTimeline {
+  followup: FollowUpPublic;
+  position: number;
+  total: number;
+}
+
+export interface CaseFollowupsResponse {
+  case: {
+    id: string;
+    case_number: string;
+  };
+  followups: FollowUpPublic[];
+  timeline: CaseFollowupsTimeline[];
+  total_followups: number;
+  first_followup?: FollowUpPublic;
+  latest_followup?: FollowUpPublic;
+}
+
+export interface OverdueFollowupItem {
+  followup: FollowUpPublic;
+  days_overdue: number;
+}
+
+export interface UpcomingFollowupItem {
+  followup: FollowUpPublic;
+  days_until: number;
+}
+
+export interface DueFollowupsResponse {
+  overdue: {
+    count: number;
+    items: OverdueFollowupItem[];
+  };
+  due_today: {
+    count: number;
+    items: FollowUpPublic[];
+  };
+  upcoming_week: {
+    count: number;
+    items: UpcomingFollowupItem[];
+  };
+  total_due: number;
+  check_date: string;
+}
+
+export interface ScheduleNextFollowupResponse {
+  message: string;
+  current_followup: FollowUpPublic;
+  scheduled_followup: FollowUpPublic;
+}
+
 export class FollowupsService {
-  public static readFollowups(data: FollowupsReadFollowupsData = {}): CancelablePromise<FollowUpsPublic> {
+  public static readFollowups(
+    data: FollowupsReadFollowupsData = {},
+  ): CancelablePromise<FollowUpsPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
-      url: '/followups/',
+      method: "GET",
+      url: "/followups/",
       query: {
         skip: data.skip,
         limit: data.limit,
@@ -93,72 +146,110 @@ export class FollowupsService {
         upcoming: data.upcoming,
       },
       errors: {
-        422: 'Validation Error',
-        403: 'Forbidden',
-      }
+        422: "Validation Error",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static readFollowup(data: FollowupsReadFollowupData): CancelablePromise<FollowUpPublic> {
+  public static readFollowup(
+    data: FollowupsReadFollowupData,
+  ): CancelablePromise<FollowUpPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
+      method: "GET",
       url: `/followups/${data.followupId}`,
       errors: {
-        404: 'Follow-up not found',
-        403: 'Forbidden',
-      }
+        404: "Follow-up not found",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static createFollowup(data: FollowupsCreateFollowupData): CancelablePromise<FollowUpPublic> {
+  public static createFollowup(
+    data: FollowupsCreateFollowupData,
+  ): CancelablePromise<FollowUpPublic> {
     return __request(OpenAPI, {
-      method: 'POST',
-      url: '/followups/',
+      method: "POST",
+      url: "/followups/",
       body: data.requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
       errors: {
-        422: 'Validation Error',
-        403: 'Forbidden',
-        400: 'Bad Request',
-        404: 'Not Found',
-      }
+        422: "Validation Error",
+        403: "Forbidden",
+        400: "Bad Request",
+        404: "Not Found",
+      },
     });
   }
 
-  public static updateFollowup(data: FollowupsUpdateFollowupData): CancelablePromise<FollowUpPublic> {
+  public static updateFollowup(
+    data: FollowupsUpdateFollowupData,
+  ): CancelablePromise<FollowUpPublic> {
     return __request(OpenAPI, {
-      method: 'PUT',
+      method: "PUT",
       url: `/followups/${data.followupId}`,
       body: data.requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
       errors: {
-        422: 'Validation Error',
-        404: 'Follow-up not found',
-        403: 'Forbidden',
-        400: 'Bad Request',
-      }
+        422: "Validation Error",
+        404: "Follow-up not found",
+        403: "Forbidden",
+        400: "Bad Request",
+      },
     });
   }
 
-  public static deleteFollowup(data: FollowupsDeleteFollowupData): CancelablePromise<{ message: string }> {
+  public static deleteFollowup(
+    data: FollowupsDeleteFollowupData,
+  ): CancelablePromise<{ message: string }> {
     return __request(OpenAPI, {
-      method: 'DELETE',
+      method: "DELETE",
       url: `/followups/${data.followupId}`,
       errors: {
-        404: 'Follow-up not found',
-        403: 'Forbidden',
-      }
+        404: "Follow-up not found",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static getDueFollowups(): CancelablePromise<any> {
+  public static getCaseFollowups(
+    caseId: string,
+  ): CancelablePromise<CaseFollowupsResponse> {
     return __request(OpenAPI, {
-      method: 'GET',
-      url: '/followups/upcoming/due',
+      method: "GET",
+      url: `/followups/case/${caseId}`,
       errors: {
-        403: 'Forbidden',
-      }
+        404: "Case not found",
+        403: "Forbidden",
+      },
+    });
+  }
+
+  public static getDueFollowups(): CancelablePromise<DueFollowupsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/followups/upcoming/due",
+      errors: {
+        403: "Forbidden",
+      },
+    });
+  }
+
+  public static scheduleNextFollowup(data: {
+    followupId: string;
+    next_date: string;
+  }): CancelablePromise<ScheduleNextFollowupResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: `/followups/${data.followupId}/schedule-next`,
+      query: {
+        next_date: data.next_date,
+      },
+      errors: {
+        404: "Follow-up not found",
+        403: "Forbidden",
+        400: "Bad Request",
+      },
     });
   }
 }
-

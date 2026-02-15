@@ -1,9 +1,16 @@
 // Temporary PrescriptionsService until SDK is regenerated
-import type { CancelablePromise } from './core/CancelablePromise';
-import { OpenAPI } from './core/OpenAPI';
-import { request as __request } from './core/request';
+import type { CancelablePromise } from "./core/CancelablePromise";
+import { OpenAPI } from "./core/OpenAPI";
+import { request as __request } from "./core/request";
 
-export type PrescriptionType = "acute" | "chronic" | "constitutional" | "intercurrent" | "nosode" | "sarcode" | "tautode";
+export type PrescriptionType =
+  | "acute"
+  | "chronic"
+  | "constitutional"
+  | "intercurrent"
+  | "nosode"
+  | "sarcode"
+  | "tautode";
 
 export interface PrescriptionsReadPrescriptionsData {
   skip?: number;
@@ -93,11 +100,36 @@ export interface PrescriptionsPublic {
   count: number;
 }
 
+export interface PrintPrescriptionMedicine {
+  name: string;
+  potency: string;
+  form: string;
+  dosage: string;
+  duration: string;
+  instructions: string;
+}
+
+export interface PrintPrescriptionResponse {
+  prescription: PrescriptionPublic;
+  patient: {
+    id: string;
+    full_name: string;
+  };
+  medicines: PrintPrescriptionMedicine[];
+  doctor: {
+    id: string;
+    full_name: string;
+  };
+  print_date: string;
+}
+
 export class PrescriptionsService {
-  public static readPrescriptions(data: PrescriptionsReadPrescriptionsData = {}): CancelablePromise<PrescriptionsPublic> {
+  public static readPrescriptions(
+    data: PrescriptionsReadPrescriptionsData = {},
+  ): CancelablePromise<PrescriptionsPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
-      url: '/prescriptions/',
+      method: "GET",
+      url: "/prescriptions/",
       query: {
         skip: data.skip,
         limit: data.limit,
@@ -106,73 +138,82 @@ export class PrescriptionsService {
         to_date: data.to_date,
       },
       errors: {
-        422: 'Validation Error',
-        403: 'Forbidden',
-      }
+        422: "Validation Error",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static readPrescription(data: PrescriptionsReadPrescriptionData): CancelablePromise<PrescriptionPublic> {
+  public static readPrescription(
+    data: PrescriptionsReadPrescriptionData,
+  ): CancelablePromise<PrescriptionPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
+      method: "GET",
       url: `/prescriptions/${data.prescriptionId}`,
       errors: {
-        404: 'Prescription not found',
-        403: 'Forbidden',
-      }
+        404: "Prescription not found",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static createPrescription(data: PrescriptionsCreatePrescriptionData): CancelablePromise<PrescriptionPublic> {
+  public static createPrescription(
+    data: PrescriptionsCreatePrescriptionData,
+  ): CancelablePromise<PrescriptionPublic> {
     return __request(OpenAPI, {
-      method: 'POST',
-      url: '/prescriptions/',
+      method: "POST",
+      url: "/prescriptions/",
       body: data.requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
       errors: {
-        422: 'Validation Error',
-        403: 'Forbidden',
-        400: 'Bad Request',
-        404: 'Not Found',
-      }
+        422: "Validation Error",
+        403: "Forbidden",
+        400: "Bad Request",
+        404: "Not Found",
+      },
     });
   }
 
-  public static updatePrescription(data: PrescriptionsUpdatePrescriptionData): CancelablePromise<PrescriptionPublic> {
+  public static updatePrescription(
+    data: PrescriptionsUpdatePrescriptionData,
+  ): CancelablePromise<PrescriptionPublic> {
     return __request(OpenAPI, {
-      method: 'PUT',
+      method: "PUT",
       url: `/prescriptions/${data.prescriptionId}`,
       body: data.requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
       errors: {
-        422: 'Validation Error',
-        404: 'Prescription not found',
-        403: 'Forbidden',
-        400: 'Bad Request',
-      }
+        422: "Validation Error",
+        404: "Prescription not found",
+        403: "Forbidden",
+        400: "Bad Request",
+      },
     });
   }
 
-  public static deletePrescription(data: PrescriptionsDeletePrescriptionData): CancelablePromise<{ message: string }> {
+  public static deletePrescription(
+    data: PrescriptionsDeletePrescriptionData,
+  ): CancelablePromise<{ message: string }> {
     return __request(OpenAPI, {
-      method: 'DELETE',
+      method: "DELETE",
       url: `/prescriptions/${data.prescriptionId}`,
       errors: {
-        404: 'Prescription not found',
-        403: 'Forbidden',
-      }
+        404: "Prescription not found",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static printPrescription(prescriptionId: string): CancelablePromise<any> {
+  public static printPrescription(
+    prescriptionId: string,
+  ): CancelablePromise<PrintPrescriptionResponse> {
     return __request(OpenAPI, {
-      method: 'GET',
+      method: "GET",
       url: `/prescriptions/${prescriptionId}/print`,
       errors: {
-        404: 'Prescription not found',
-        403: 'Forbidden',
-      }
+        404: "Prescription not found",
+        403: "Forbidden",
+      },
     });
   }
 }
-

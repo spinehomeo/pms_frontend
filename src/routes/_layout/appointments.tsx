@@ -34,11 +34,12 @@ function AppointmentsTableContent() {
 
   const filteredAppointments = useMemo(() => {
     if (!searchQuery.trim()) return appointments.data
-    
+
     const query = searchQuery.toLowerCase()
     return appointments.data.filter((appointment) => {
       return (
         appointment.patient_name?.toLowerCase().includes(query) ||
+        appointment.patient_phone?.toLowerCase().includes(query) ||
         appointment.consultation_type?.toLowerCase().includes(query) ||
         appointment.status?.toLowerCase().includes(query) ||
         appointment.reason?.toLowerCase().includes(query) ||
@@ -65,7 +66,7 @@ function AppointmentsTableContent() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by patient, type, status..."
+            placeholder="Search by patient name, phone, type, status..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"

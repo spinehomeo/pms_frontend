@@ -40,7 +40,7 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const medicineSchema = z.object({
-  medicine_id: z.string().min(1, "Medicine is required"),
+  medicine_id: z.string().min(1, "Remidies is required"),
   stock_id: z.string().min(1, "Stock item is required"),
   quantity: z.number().min(0.1, "Quantity must be greater than 0"),
 })
@@ -152,7 +152,7 @@ const AddPrescription = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
+        <Button
           type="button"
           className="my-4"
           onClick={(e) => {
@@ -198,7 +198,7 @@ const AddPrescription = () => {
                         ) : casesData?.data && casesData.data.length > 0 ? (
                           casesData.data.map((caseItem) => (
                             <SelectItem key={caseItem.id} value={caseItem.id}>
-                              {caseItem.patient_name || `Case ${caseItem.case_number}`} - {caseItem.chief_complaint}
+                              {caseItem.patient_name || `Case ${caseItem.case_number}`} - {caseItem.chief_complaint_patient}
                             </SelectItem>
                           ))
                         ) : (
@@ -284,7 +284,7 @@ const AddPrescription = () => {
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <FormLabel>
-                    Medicines <span className="text-destructive">*</span>
+                    Remidies <span className="text-destructive">*</span>
                   </FormLabel>
                   <Button
                     type="button"
@@ -293,7 +293,7 @@ const AddPrescription = () => {
                     onClick={() => append({ medicine_id: "", stock_id: "", quantity: 1 })}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Medicine
+                    Add Remidies
                   </Button>
                 </div>
 
@@ -304,7 +304,7 @@ const AddPrescription = () => {
                       name={`medicines.${index}.medicine_id`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Medicine</FormLabel>
+                          <FormLabel>Remidies</FormLabel>
                           <Select
                             onValueChange={(value) => {
                               field.onChange(value)

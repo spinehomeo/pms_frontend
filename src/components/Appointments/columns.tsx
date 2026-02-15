@@ -33,6 +33,18 @@ export const columns: ColumnDef<AppointmentPublic>[] = [
     ),
   },
   {
+    accessorKey: "patient_phone",
+    header: "Phone",
+    cell: ({ row }) => {
+      const phone = row.original.patient_phone
+      return (
+        <span className={cn("text-sm text-muted-foreground", !phone && "italic")}>
+          {phone || "-"}
+        </span>
+      )
+    },
+  },
+  {
     accessorKey: "appointment_date",
     header: "Date",
     cell: ({ row }) => {
@@ -57,22 +69,13 @@ export const columns: ColumnDef<AppointmentPublic>[] = [
     },
   },
   {
-    accessorKey: "duration_minutes",
-    header: "Duration",
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
-        {row.original.duration_minutes} min
-      </span>
-    ),
-  },
-  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status
       return (
-        <Badge 
-          variant="outline" 
+        <Badge
+          variant="outline"
           className={cn("capitalize", statusColors[status] || "bg-gray-500/10 text-gray-500")}
         >
           {status.replace("_", " ")}

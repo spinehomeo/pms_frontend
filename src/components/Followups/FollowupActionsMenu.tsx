@@ -11,6 +11,7 @@ import {
 import DeleteFollowup from "../Followups/DeleteFollowup"
 import EditFollowup from "../Followups/EditFollowup"
 import ViewFollowup from "../Followups/ViewFollowup"
+import ScheduleNextFollowup from "../Followups/ScheduleNextFollowup"
 
 interface FollowupActionsMenuProps {
   followup: FollowUpPublic
@@ -28,6 +29,7 @@ export const FollowupActionsMenu = ({ followup }: FollowupActionsMenuProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <ViewFollowup followup={followup} />
+        <ScheduleNextFollowup followup={followup} onSuccess={() => setOpen(false)} />
         <EditFollowup followup={followup} onSuccess={() => setOpen(false)} />
         <DeleteFollowup id={followup.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>

@@ -41,7 +41,7 @@ import { handleError } from "@/utils"
 import { Plus } from "lucide-react"
 
 const medicineSchema = z.object({
-  medicine_id: z.string().min(1, "Medicine is required"),
+  medicine_id: z.string().min(1, " is required"),
   stock_id: z.string().min(1, "Stock item is required"),
   quantity: z.number().min(0.1, "Quantity must be greater than 0"),
 })
@@ -234,7 +234,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
 
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
-                  <FormLabel>Medicines</FormLabel>
+                  <FormLabel>Remidies</FormLabel>
                   <Button
                     type="button"
                     variant="outline"
@@ -242,7 +242,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                     onClick={() => append({ medicine_id: "", stock_id: "", quantity: 1 })}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Medicine
+                    Add Remidies
                   </Button>
                 </div>
 
@@ -253,7 +253,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                       name={`medicines.${index}.medicine_id`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Medicine</FormLabel>
+                          <FormLabel>Remidies</FormLabel>
                           <Select
                             onValueChange={(value) => {
                               field.onChange(value)
@@ -268,7 +268,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                             </FormControl>
                             <SelectContent>
                               {medicinesError ? (
-                                <div className="p-2 text-sm text-destructive">Failed to load medicines</div>
+                                <div className="p-2 text-sm text-destructive">Failed to load Remidies</div>
                               ) : medicinesData?.data && medicinesData.data.length > 0 ? (
                                 medicinesData.data.map((medicine) => (
                                   <SelectItem key={medicine.id} value={medicine.id}>
@@ -276,7 +276,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                                   </SelectItem>
                                 ))
                               ) : (
-                                <div className="p-2 text-sm text-muted-foreground">No medicines available</div>
+                                <div className="p-2 text-sm text-muted-foreground">No Remidies available</div>
                               )}
                             </SelectContent>
                           </Select>

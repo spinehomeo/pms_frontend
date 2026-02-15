@@ -1,4 +1,4 @@
-import { Home, Users, UserCircle, Calendar, Pill, FileText, RotateCcw, ClipboardList, FolderOpen } from "lucide-react"
+import { Home, Users, UserCircle, Calendar, Pill, FileText, RotateCcw, ClipboardList, FolderOpen, Clock, Settings, Feather } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -25,13 +25,16 @@ export function AppSidebar() {
   const isDoctor = (currentUser as any)?.role === "doctor" || (currentUser as any)?.is_doctor === true
   if (isDoctor) {
     items.push(
+      { icon: Clock, title: "Availability", path: "/availability" },
       { icon: UserCircle, title: "Patients", path: "/patients" },
       { icon: Calendar, title: "Appointments", path: "/appointments" },
       { icon: FolderOpen, title: "Cases", path: "/cases" },
       { icon: ClipboardList, title: "Prescriptions", path: "/prescriptions" },
-      { icon: Pill, title: "Medicines", path: "/medicines" },
+      { icon: Pill, title: "Remidies", path: "/medicines" },
       { icon: FileText, title: "Reports", path: "/reports" },
-      { icon: RotateCcw, title: "Followups", path: "/followups" }
+      { icon: RotateCcw, title: "Followups", path: "/followups" },
+      { icon: Feather, title: "Content", path: "/web-content" },
+      { icon: Settings, title: "Core Settings", path: "/core-settings" }
     )
   }
 

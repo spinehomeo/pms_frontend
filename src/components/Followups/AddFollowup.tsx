@@ -164,7 +164,7 @@ const AddFollowup = () => {
                       <SelectContent>
                         {casesData?.data.map((caseItem) => (
                           <SelectItem key={caseItem.id} value={caseItem.id}>
-                            {caseItem.patient_name || `Case ${caseItem.case_number}`} - {caseItem.chief_complaint}
+                            {caseItem.patient_name || `Case ${caseItem.case_number}`} - {caseItem.chief_complaint_patient}
                           </SelectItem>
                         ))}
                       </SelectContent>

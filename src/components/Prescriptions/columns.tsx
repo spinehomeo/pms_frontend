@@ -60,8 +60,8 @@ export const columns: ColumnDef<PrescriptionPublic>[] = [
     cell: ({ row }) => {
       const type = row.original.prescription_type
       return (
-        <Badge 
-          variant="outline" 
+        <Badge
+          variant="outline"
           className={cn("capitalize", typeColors[type] || "bg-gray-500/10 text-gray-500")}
         >
           {type}
@@ -89,12 +89,12 @@ export const columns: ColumnDef<PrescriptionPublic>[] = [
   },
   {
     accessorKey: "medicines",
-    header: "Medicines",
+    header: "Remidies",
     cell: ({ row }) => {
       const medicines = row.original.medicines || []
       return (
         <span className="text-sm text-muted-foreground">
-          {medicines.length} medicine(s)
+          {medicines.length} remidie(s)
         </span>
       )
     },

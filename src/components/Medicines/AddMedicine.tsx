@@ -39,10 +39,10 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  medicine_id: z.string().min(1, { message: "Medicine is required" }),
+  medicine_id: z.coerce.number().min(1, { message: "Remidies is required" }),
   potency: z.string().min(1, { message: "Potency is required" }),
-  potency_scale: z.enum(["X", "C", "LM", "Q", "M", "CM", "MM"]).default("C"),
-  form: z.enum(["pills", "globules", "drops", "powder", "ointment", "suppository", "injection"]).default("globules"),
+  potency_scale: z.enum(["C", "X", "Q"]).default("C"),
+  form: z.enum(["DISKETTE", "SOM", "BLANKETS", "BIO_CHEMIC", "PLACEBO", "GLOBULES", "DROPS"]).default("GLOBULES"),
   quantity: z.number().min(0, { message: "Quantity must be 0 or greater" }),
   unit: z.string().default("packet"),
   batch_number: z.string().optional(),
@@ -73,10 +73,10 @@ const AddMedicine = () => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      medicine_id: "",
+      medicine_id: 0,
       potency: "",
       potency_scale: "C",
-      form: "globules",
+      form: "GLOBULES",
       quantity: 0,
       unit: "packet",
       batch_number: "",
@@ -93,7 +93,7 @@ const AddMedicine = () => {
     mutationFn: (data: DoctorMedicineStockCreate) =>
       MedicinesService.createStockItem({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Medicine added to stock successfully")
+      showSuccessToast("Remidies added to stock successfully")
       form.reset()
       setIsOpen(false)
     },
@@ -127,14 +127,14 @@ const AddMedicine = () => {
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />
-          Add Medicine to Stock
+          Add Remidies to Stock
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Medicine to Stock</DialogTitle>
+          <DialogTitle>Add Remidies to Stock</DialogTitle>
           <DialogDescription>
-            Add a new medicine to your inventory.
+            Add a new remidies to your inventory.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -146,20 +146,20 @@ const AddMedicine = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Medicine <span className="text-destructive">*</span>
+                      Remidies <span className="text-destructive">*</span>
                     </FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                      defaultValue={field.value ? String(field.value) : ""}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a medicine" />
+                          <SelectValue placeholder="Select a remidies" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {medicinesData?.data.map((medicine) => (
-                          <SelectItem key={medicine.id} value={medicine.id}>
+                          <SelectItem key={medicine.id} value={String(medicine.id)}>
                             {medicine.name}
                           </SelectItem>
                         ))}
@@ -206,13 +206,9 @@ const AddMedicine = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="X">X</SelectItem>
                           <SelectItem value="C">C</SelectItem>
-                          <SelectItem value="LM">LM</SelectItem>
+                          <SelectItem value="X">X</SelectItem>
                           <SelectItem value="Q">Q</SelectItem>
-                          <SelectItem value="M">M</SelectItem>
-                          <SelectItem value="CM">CM</SelectItem>
-                          <SelectItem value="MM">MM</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -236,13 +232,13 @@ const AddMedicine = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="pills">Pills</SelectItem>
-                          <SelectItem value="globules">Globules</SelectItem>
-                          <SelectItem value="drops">Drops</SelectItem>
-                          <SelectItem value="powder">Powder</SelectItem>
-                          <SelectItem value="ointment">Ointment</SelectItem>
-                          <SelectItem value="suppository">Suppository</SelectItem>
-                          <SelectItem value="injection">Injection</SelectItem>
+                          <SelectItem value="DISKETTE">Diskette</SelectItem>
+                          <SelectItem value="SOM">Som</SelectItem>
+                          <SelectItem value="BLANKETS">Blankets</SelectItem>
+                          <SelectItem value="BIO_CHEMIC">Bio Chemic</SelectItem>
+                          <SelectItem value="PLACEBO">Placebo</SelectItem>
+                          <SelectItem value="GLOBULES">Globules</SelectItem>
+                          <SelectItem value="DROPS">Drops</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

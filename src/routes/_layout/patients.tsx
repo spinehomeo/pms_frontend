@@ -43,7 +43,8 @@ function PatientsTableContent() {
         patient.phone?.toLowerCase().includes(query) ||
         patient.residential_address?.toLowerCase().includes(query) ||
         patient.city?.toLowerCase().includes(query) ||
-        patient.cnic?.toLowerCase().includes(query)
+        patient.cnic?.toLowerCase().includes(query) ||
+        patient.referred_by?.toLowerCase().includes(query)
       )
     })
   }, [patients.data, searchQuery])

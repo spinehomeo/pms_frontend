@@ -11,6 +11,7 @@ import {
 import DeletePrescription from "../Prescriptions/DeletePrescription"
 import EditPrescription from "../Prescriptions/EditPrescription"
 import ViewPrescription from "../Prescriptions/ViewPrescription"
+import PrintPrescription from "../Prescriptions/PrintPrescription"
 
 interface PrescriptionActionsMenuProps {
   prescription: PrescriptionPublic
@@ -28,6 +29,7 @@ export const PrescriptionActionsMenu = ({ prescription }: PrescriptionActionsMen
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <ViewPrescription prescription={prescription} />
+        <PrintPrescription prescription={prescription} />
         <EditPrescription prescription={prescription} onSuccess={() => setOpen(false)} />
         <DeletePrescription id={prescription.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>

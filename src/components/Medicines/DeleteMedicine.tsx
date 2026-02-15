@@ -64,7 +64,7 @@ const DeleteMedicine = ({ id, onSuccess }: DeleteMedicineProps) => {
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Delete Medicine Stock Item</DialogTitle>
+            <DialogTitle>Delete Remidies Stock Item</DialogTitle>
             <DialogDescription>
               This stock item will be permanently deleted. Note: Items used in prescriptions cannot be deleted. Are you sure? You will not
               be able to undo this action.

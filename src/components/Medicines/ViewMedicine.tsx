@@ -39,14 +39,14 @@ const ViewMedicine = ({ stock }: ViewMedicineProps) => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Medicine Stock Details</DialogTitle>
+            <DialogTitle>Remidies Stock Details</DialogTitle>
             <DialogDescription>
-              Complete information about the medicine stock item
+              Complete information about the remidies stock item
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Medicine</p>
+              <p className="text-sm font-medium text-muted-foreground">Remidies</p>
               <p className="text-base font-semibold text-lg">{stock.medicine_name || "Unknown"}</p>
             </div>
 

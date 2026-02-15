@@ -1,12 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
-import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { Plus, Search } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
-import { CasesService, PatientsService } from "@/client"
+import { AppointmentsService, CasesService, PatientsService } from "@/client"
 import type { CaseCreate } from "@/client/CasesService"
+import type { PatientPublic } from "@/client/PatientsService"
+import { DoctorPreferencesService } from "@/client/DoctorPreferencesService"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,28 +40,27 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),
-  chief_complaint: z.string().min(1, { message: "Chief complaint is required" }),
+  appointment_id: z.string().optional(),
+  chief_complaint_patient: z.string().min(1, { message: "Chief complaint is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
-  onset: z.string().optional(),
-  location: z.string().optional(),
-  sensation: z.string().optional(),
-  modalities: z.string().optional(),
-  concomitants: z.string().optional(),
-  generals: z.string().optional(),
-  mentals: z.string().optional(),
   physicals: z.string().optional(),
-  miasm_assessment: z.string().optional(),
-  vitality_assessment: z.string().optional(),
-  case_notes: z.string().optional(),
-})
+  noted_complaint_doctor: z.string().optional(),
+  peculiar_symptoms: z.string().optional(),
+  causation: z.string().optional(),
+  lab_reports: z.string().optional(),
+}).catchall(z.string()) // Allow custom fields
 
 type FormData = z.infer<typeof formSchema>
 
 const AddCase = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [patientSearchInput, setPatientSearchInput] = useState("")
+  const [showPatientSuggestions, setShowPatientSuggestions] = useState(false)
+  const [selectedPatientInfo, setSelectedPatientInfo] = useState<PatientPublic | null>(null)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -72,27 +73,73 @@ const AddCase = () => {
     throwOnError: false,
   })
 
+  // Fetch appointments for dropdown
+  const { data: appointmentsData } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: () => AppointmentsService.readAppointments({ skip: 0, limit: 1000 }),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  // Fetch doctor preferences for custom fields
+  const { data: preferencesData } = useQuery({
+    queryKey: ["doctor-preferences"],
+    queryFn: () => DoctorPreferencesService.getPreferences(),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  // Filter patients based on search input
+  const filteredPatients = useMemo(() => {
+    if (!patientsData?.data) return []
+    if (!patientSearchInput.trim()) return patientsData.data
+
+    const query = patientSearchInput.toLowerCase()
+    return patientsData.data.filter((patient) => {
+      return (
+        patient.full_name?.toLowerCase().includes(query) ||
+        patient.city?.toLowerCase().includes(query) ||
+        patient.phone?.toLowerCase().includes(query)
+      )
+    })
+  }, [patientsData?.data, patientSearchInput])
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       patient_id: "",
-      chief_complaint: "",
+      appointment_id: "",
+      chief_complaint_patient: "",
       duration: "",
-      onset: "",
-      location: "",
-      sensation: "",
-      modalities: "",
-      concomitants: "",
-      generals: "",
-      mentals: "",
       physicals: "",
-      miasm_assessment: "",
-      vitality_assessment: "",
-      case_notes: "",
+      noted_complaint_doctor: "",
+      peculiar_symptoms: "",
+      causation: "",
+      lab_reports: "",
     },
   })
+
+  // Watch patient_id to filter appointments
+  const watchPatientId = useWatch({ control: form.control, name: "patient_id" })
+
+  // Filter appointments by selected patient
+  const filteredAppointments = useMemo(() => {
+    if (!appointmentsData?.data || !watchPatientId) return appointmentsData?.data || []
+    return appointmentsData.data.filter((appointment) => appointment.patient_id === watchPatientId)
+  }, [appointmentsData?.data, watchPatientId])
+
+  // Reset patient search when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setPatientSearchInput("")
+      setShowPatientSuggestions(false)
+      setSelectedPatientInfo(null)
+    }
+  }, [isOpen])
 
   const mutation = useMutation({
     mutationFn: (data: CaseCreate) =>
@@ -110,21 +157,27 @@ const AddCase = () => {
   })
 
   const onSubmit = (data: FormData) => {
+    // Extract custom fields (any field not in the standard schema)
+    const standardFields = ['patient_id', 'appointment_id', 'chief_complaint_patient', 'duration', 'physicals', 'noted_complaint_doctor', 'peculiar_symptoms', 'causation', 'lab_reports']
+    const customFields: Record<string, string> = {}
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!standardFields.includes(key) && value) {
+        customFields[key] = value as string
+      }
+    })
+
     const caseData: CaseCreate = {
       patient_id: data.patient_id,
-      chief_complaint: data.chief_complaint,
+      appointment_id: data.appointment_id || undefined,
+      chief_complaint_patient: data.chief_complaint_patient,
       duration: data.duration,
-      onset: data.onset || undefined,
-      location: data.location || undefined,
-      sensation: data.sensation || undefined,
-      modalities: data.modalities || undefined,
-      concomitants: data.concomitants || undefined,
-      generals: data.generals || undefined,
-      mentals: data.mentals || undefined,
       physicals: data.physicals || undefined,
-      miasm_assessment: data.miasm_assessment || undefined,
-      vitality_assessment: data.vitality_assessment || undefined,
-      case_notes: data.case_notes || undefined,
+      noted_complaint_doctor: data.noted_complaint_doctor || undefined,
+      peculiar_symptoms: data.peculiar_symptoms || undefined,
+      causation: data.causation || undefined,
+      lab_reports: data.lab_reports || undefined,
+      custom_fields: Object.keys(customFields).length > 0 ? customFields : undefined,
     }
     mutation.mutate(caseData)
   }
@@ -155,24 +208,98 @@ const AddCase = () => {
                     <FormLabel>
                       Patient <span className="text-destructive">*</span>
                     </FormLabel>
+                    <div className="space-y-2 relative">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by patient name, city..."
+                          value={patientSearchInput}
+                          onChange={(e) => {
+                            setPatientSearchInput(e.target.value)
+                            setShowPatientSuggestions(true)
+                          }}
+                          onFocus={() => setShowPatientSuggestions(true)}
+                          className="pl-8"
+                        />
+                      </div>
+
+                      {showPatientSuggestions && patientSearchInput && (
+                        <div className="w-full bg-background border border-input rounded-md shadow-md max-h-64 overflow-y-auto">
+                          {filteredPatients.length > 0 ? (
+                            <div>
+                              {filteredPatients.map((patient) => (
+                                <div
+                                  key={patient.id}
+                                  onClick={() => {
+                                    field.onChange(patient.id)
+                                    setSelectedPatientInfo(patient)
+                                    setPatientSearchInput(patient.full_name)
+                                    setShowPatientSuggestions(false)
+                                  }}
+                                  className="px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                                >
+                                  <div className="font-medium">{patient.full_name}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {patient.city ? `${patient.city}` : "No city"}
+                                    {patient.phone && ` • ${patient.phone}`}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              No patients found
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {field.value && selectedPatientInfo && (
+                        <div className="bg-muted p-3 rounded-md space-y-1">
+                          <div className="text-sm font-medium">Selected Patient</div>
+                          <div className="text-sm">{selectedPatientInfo.full_name}</div>
+                          {selectedPatientInfo.phone && (
+                            <div className="text-sm text-muted-foreground">
+                              📱 {selectedPatientInfo.phone}
+                            </div>
+                          )}
+                          {selectedPatientInfo.city && (
+                            <div className="text-sm text-muted-foreground">
+                              📍 {selectedPatientInfo.city}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="appointment_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Appointment (Optional)</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a patient" />
+                          <SelectValue placeholder="Link to appointment" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {patientsData?.data && patientsData.data.length > 0 ? (
-                          patientsData.data.map((patient) => (
-                            <SelectItem key={patient.id} value={patient.id}>
-                              {patient.full_name} {patient.email && `(${patient.email})`}
+                        {filteredAppointments && filteredAppointments.length > 0 ? (
+                          filteredAppointments.map((appointment) => (
+                            <SelectItem key={appointment.id} value={appointment.id}>
+                              {appointment.appointment_date} {appointment.appointment_time} - {appointment.patient_name}
                             </SelectItem>
                           ))
                         ) : (
-                          <div className="p-2 text-sm text-muted-foreground">No patients available</div>
+                          <div className="p-2 text-sm text-muted-foreground">No appointments available for this patient</div>
                         )}
                       </SelectContent>
                     </Select>
@@ -184,16 +311,17 @@ const AddCase = () => {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="chief_complaint"
+                  name="chief_complaint_patient"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Chief Complaint <span className="text-destructive">*</span>
+                        Chief Complaint (Patient's Words) <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Main complaint"
+                        <Textarea
+                          placeholder="Main complaint in patient's words"
                           {...field}
+                          rows={2}
                         />
                       </FormControl>
                       <FormMessage />
@@ -211,7 +339,7 @@ const AddCase = () => {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., 2 weeks, 1 month"
+                          placeholder="e.g., 3 days, 2 weeks"
                           {...field}
                         />
                       </FormControl>
@@ -220,142 +348,16 @@ const AddCase = () => {
                   )}
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="onset"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Onset</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="How it started"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Location of complaint"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="sensation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sensation</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the sensation"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="modalities"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Modalities</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="What makes it better or worse"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="concomitants"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Concomitants</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Associated symptoms"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="generals"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Generals</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="General symptoms"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="mentals"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mentals</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Mental/emotional symptoms"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}
                 name="physicals"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Physicals</FormLabel>
+                    <FormLabel>Physical Examination</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Physical examination findings"
+                        placeholder="Physical examination findings (e.g., BP 120/80)"
                         {...field}
                         rows={2}
                       />
@@ -367,13 +369,13 @@ const AddCase = () => {
 
               <FormField
                 control={form.control}
-                name="miasm_assessment"
+                name="noted_complaint_doctor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Miasm Assessment</FormLabel>
+                    <FormLabel>Noted Complaint (Doctor's Assessment)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Miasm evaluation"
+                        placeholder="Doctor's professional assessment"
                         {...field}
                         rows={2}
                       />
@@ -385,13 +387,13 @@ const AddCase = () => {
 
               <FormField
                 control={form.control}
-                name="vitality_assessment"
+                name="peculiar_symptoms"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vitality Assessment</FormLabel>
+                    <FormLabel>Peculiar Symptoms</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Vitality evaluation"
+                        placeholder="Unique or unusual symptoms"
                         {...field}
                         rows={2}
                       />
@@ -403,21 +405,78 @@ const AddCase = () => {
 
               <FormField
                 control={form.control}
-                name="case_notes"
+                name="causation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Case Notes</FormLabel>
+                    <FormLabel>Causation</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Additional notes"
+                        placeholder="Possible causes or triggers"
                         {...field}
-                        rows={3}
+                        rows={2}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="lab_reports"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lab Reports</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Laboratory test results"
+                        {...field}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Dynamic Custom Fields */}
+              {preferencesData?.custom_fields && preferencesData.custom_fields.length > 0 && (
+                <>
+                  <div className="col-span-full mt-4 border-t pt-4">
+                    <h3 className="text-sm font-medium mb-3">Custom Fields</h3>
+                  </div>
+                  {preferencesData.custom_fields.map((customField) => (
+                    <FormField
+                      key={customField.field_name}
+                      control={form.control}
+                      name={customField.field_name as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {customField.display_name}
+                            {customField.is_required && <span className="text-destructive">*</span>}
+                          </FormLabel>
+                          <FormControl>
+                            {customField.field_type === 'textarea' ? (
+                              <Textarea
+                                placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                {...field}
+                                rows={2}
+                              />
+                            ) : (
+                              <Input
+                                placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                {...field}
+                              />
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </>
+              )}
             </div>
 
             <DialogFooter>

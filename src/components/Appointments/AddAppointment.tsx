@@ -1,12 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
-import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { Plus, CheckCircle2, XCircle, Search } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
 import { AppointmentsService, PatientsService } from "@/client"
 import type { AppointmentCreate } from "@/client/AppointmentsService"
+import type { PatientPublic } from "@/client/PatientsService"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,6 +39,7 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),
@@ -54,6 +56,14 @@ type FormData = z.infer<typeof formSchema>
 
 const AddAppointment = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [patientSearchInput, setPatientSearchInput] = useState("")
+  const [showPatientSuggestions, setShowPatientSuggestions] = useState(false)
+  const [selectedPatientInfo, setSelectedPatientInfo] = useState<PatientPublic | null>(null)
+  const [availabilityStatus, setAvailabilityStatus] = useState<{
+    checked: boolean
+    available?: boolean
+    message?: string
+  }>({ checked: false })
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -63,6 +73,21 @@ const AddAppointment = () => {
     queryFn: () => PatientsService.readPatients({ skip: 0, limit: 1000 }),
     enabled: isOpen,
   })
+
+  // Filter patients based on search input
+  const filteredPatients = useMemo(() => {
+    if (!patientsData?.data) return []
+    if (!patientSearchInput.trim()) return patientsData.data
+
+    const query = patientSearchInput.toLowerCase()
+    return patientsData.data.filter((patient) => {
+      return (
+        patient.full_name?.toLowerCase().includes(query) ||
+        patient.city?.toLowerCase().includes(query) ||
+        patient.phone?.toLowerCase().includes(query)
+      )
+    })
+  }, [patientsData?.data, patientSearchInput])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -79,6 +104,61 @@ const AddAppointment = () => {
       notes: "",
     },
   })
+
+  // Watch date and time fields to reset availability check
+  const watchDate = useWatch({ control: form.control, name: "appointment_date" })
+  const watchTime = useWatch({ control: form.control, name: "appointment_time" })
+  const watchDuration = useWatch({ control: form.control, name: "duration_minutes" })
+
+  // Reset availability status when date, time, or duration changes
+  useEffect(() => {
+    setAvailabilityStatus({ checked: false })
+  }, [watchDate, watchTime, watchDuration])
+
+  // Reset patient search when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setPatientSearchInput("")
+      setShowPatientSuggestions(false)
+      setSelectedPatientInfo(null)
+    }
+  }, [isOpen])
+
+  const checkAvailabilityMutation = useMutation({
+    mutationFn: (data: { appointment_date: string; appointment_time: string; duration_minutes: number }) =>
+      AppointmentsService.validateAvailability(data),
+    onSuccess: (response) => {
+      setAvailabilityStatus({
+        checked: true,
+        available: response.available,
+        message: response.message,
+      })
+      if (response.available) {
+        showSuccessToast("Time slot is available!")
+      }
+    },
+    onError: (error) => {
+      setAvailabilityStatus({ checked: false })
+      handleError.call(showErrorToast, error as any)
+    },
+  })
+
+  const handleCheckAvailability = () => {
+    const date = form.getValues("appointment_date")
+    const time = form.getValues("appointment_time")
+    const duration = form.getValues("duration_minutes")
+
+    if (!date || !time) {
+      showErrorToast("Please select date and time first")
+      return
+    }
+
+    checkAvailabilityMutation.mutate({
+      appointment_date: date,
+      appointment_time: time,
+      duration_minutes: duration,
+    })
+  }
 
   const mutation = useMutation({
     mutationFn: (data: AppointmentCreate) =>
@@ -134,23 +214,69 @@ const AddAppointment = () => {
                     <FormLabel>
                       Patient <span className="text-destructive">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a patient" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {patientsData?.data.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.full_name} {patient.phone ? `(${patient.phone})` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2 relative">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by patient name, city..."
+                          value={patientSearchInput}
+                          onChange={(e) => {
+                            setPatientSearchInput(e.target.value)
+                            setShowPatientSuggestions(true)
+                          }}
+                          onFocus={() => setShowPatientSuggestions(true)}
+                          className="pl-8"
+                        />
+                      </div>
+
+                      {showPatientSuggestions && patientSearchInput && (
+                        <div className="w-full bg-background border border-input rounded-md shadow-md max-h-64 overflow-y-auto">
+                          {filteredPatients.length > 0 ? (
+                            <div>
+                              {filteredPatients.map((patient) => (
+                                <div
+                                  key={patient.id}
+                                  onClick={() => {
+                                    field.onChange(patient.id)
+                                    setSelectedPatientInfo(patient)
+                                    setPatientSearchInput(patient.full_name)
+                                    setShowPatientSuggestions(false)
+                                  }}
+                                  className="px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                                >
+                                  <div className="font-medium">{patient.full_name}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {patient.city ? `${patient.city}` : "No city"}
+                                    {patient.phone && ` • ${patient.phone}`}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              No patients found
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {field.value && selectedPatientInfo && (
+                        <div className="bg-muted p-3 rounded-md space-y-1">
+                          <div className="text-sm font-medium">Selected Patient</div>
+                          <div className="text-sm">{selectedPatientInfo.full_name}</div>
+                          {selectedPatientInfo.phone && (
+                            <div className="text-sm text-muted-foreground">
+                              📱 {selectedPatientInfo.phone}
+                            </div>
+                          )}
+                          {selectedPatientInfo.city && (
+                            <div className="text-sm text-muted-foreground">
+                              📍 {selectedPatientInfo.city}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -247,6 +373,37 @@ const AddAppointment = () => {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Availability Check */}
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCheckAvailability}
+                  disabled={checkAvailabilityMutation.isPending}
+                >
+                  Check Availability
+                </Button>
+                {availabilityStatus.checked && (
+                  <div className="flex items-center gap-2">
+                    {availabilityStatus.available ? (
+                      <>
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <span className="text-sm text-green-600">
+                          {availabilityStatus.message}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-5 w-5 text-red-500" />
+                        <span className="text-sm text-red-600">
+                          {availabilityStatus.message}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <FormField

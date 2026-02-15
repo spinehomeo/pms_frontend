@@ -37,7 +37,7 @@ function Reports() {
     throwOnError: false,
   })
 
-  // Medicine Usage
+  // Remidies Usage
   const { data: medicineUsage, isLoading: loadingMedicine, refetch: refetchMedicine } = useQuery({
     queryKey: ["reports-medicine-usage", fromDate, toDate],
     queryFn: () => ReportsService.getMedicineUsageReport(fromDate || undefined, toDate || undefined),
@@ -118,7 +118,7 @@ function Reports() {
           </TabsTrigger>
           <TabsTrigger value="medicines">
             <TrendingUp className="mr-2 h-4 w-4" />
-            Medicine Usage
+            Remidies Usage
           </TabsTrigger>
           <TabsTrigger value="prescriptions">
             <FileText className="mr-2 h-4 w-4" />
@@ -143,24 +143,32 @@ function Reports() {
             <CardContent>
               {loadingAppointments ? (
                 <Skeleton className="h-64 w-full" />
-              ) : appointmentStats && typeof appointmentStats === 'object' && 'summary' in appointmentStats ? (
+              ) : appointmentStats?.data && appointmentStats.data.length > 0 ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Appointments</p>
-                      <p className="text-2xl font-bold">{(appointmentStats as any).summary?.total_appointments || 0}</p>
+                      <p className="text-2xl font-bold">
+                        {appointmentStats.data.reduce((sum, item) => sum + item.total_appointments, 0)}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Hours</p>
-                      <p className="text-2xl font-bold">{(appointmentStats as any).summary?.total_hours || 0}</p>
+                      <p className="text-sm text-muted-foreground">Completed</p>
+                      <p className="text-2xl font-bold">
+                        {appointmentStats.data.reduce((sum, item) => sum + item.completed_appointments, 0)}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Unique Patients</p>
-                      <p className="text-2xl font-bold">{(appointmentStats as any).summary?.unique_patients || 0}</p>
+                      <p className="text-sm text-muted-foreground">Cancelled</p>
+                      <p className="text-2xl font-bold">
+                        {appointmentStats.data.reduce((sum, item) => sum + item.cancelled_appointments, 0)}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Cancellation Rate</p>
-                      <p className="text-2xl font-bold">{(appointmentStats as any).summary?.cancellation_rate || 0}%</p>
+                      <p className="text-sm text-muted-foreground">No Show</p>
+                      <p className="text-2xl font-bold">
+                        {appointmentStats.data.reduce((sum, item) => sum + item.no_show_appointments, 0)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -182,26 +190,32 @@ function Reports() {
         <TabsContent value="medicines" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Medicine Usage Report</CardTitle>
-              <CardDescription>View medicine consumption analytics</CardDescription>
+              <CardTitle>Remidies Usage Report</CardTitle>
+              <CardDescription>View remidies consumption analytics</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingMedicine ? (
                 <Skeleton className="h-64 w-full" />
-              ) : medicineUsage && typeof medicineUsage === 'object' && 'summary' in medicineUsage ? (
+              ) : medicineUsage?.data && medicineUsage.data.length > 0 ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Usage</p>
-                      <p className="text-2xl font-bold">{(medicineUsage as any).summary?.total_usage || 0}</p>
+                      <p className="text-2xl font-bold">
+                        {medicineUsage.data.reduce((sum, item) => sum + item.total_quantity, 0)}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Patients</p>
-                      <p className="text-2xl font-bold">{(medicineUsage as any).summary?.total_patients || 0}</p>
+                      <p className="text-sm text-muted-foreground">Total Prescriptions</p>
+                      <p className="text-2xl font-bold">
+                        {medicineUsage.data.reduce((sum, item) => sum + item.prescription_count, 0)}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Medicines</p>
-                      <p className="text-2xl font-bold">{(medicineUsage as any).summary?.total_medicines || 0}</p>
+                      <p className="text-sm text-muted-foreground">Unique Remidies</p>
+                      <p className="text-2xl font-bold">
+                        {new Set(medicineUsage.data.map(item => item.medicine_name)).size}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -229,24 +243,37 @@ function Reports() {
             <CardContent>
               {loadingPrescriptions ? (
                 <Skeleton className="h-64 w-full" />
-              ) : prescriptionAnalysis && typeof prescriptionAnalysis === 'object' && 'summary' in prescriptionAnalysis ? (
+              ) : prescriptionAnalysis ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Prescriptions</p>
-                      <p className="text-2xl font-bold">{(prescriptionAnalysis as any).summary?.total_prescriptions || 0}</p>
+                      <p className="text-2xl font-bold">{prescriptionAnalysis.total_prescriptions || 0}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Medicines</p>
-                      <p className="text-2xl font-bold">{(prescriptionAnalysis as any).summary?.total_medicines_prescribed || 0}</p>
+                      <p className="text-sm text-muted-foreground">Unique Remidies</p>
+                      <p className="text-2xl font-bold">{prescriptionAnalysis.unique_medicines || 0}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Avg per Prescription</p>
                       <p className="text-2xl font-bold">
-                        {(prescriptionAnalysis as any).summary?.average_medicines_per_prescription || 0}
+                        {prescriptionAnalysis.avg_medicines_per_prescription?.toFixed(1) || 0}
                       </p>
                     </div>
                   </div>
+                  {prescriptionAnalysis.top_medicines && prescriptionAnalysis.top_medicines.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium mb-2">Top Remidies</p>
+                      <div className="space-y-2">
+                        {prescriptionAnalysis.top_medicines.slice(0, 5).map((med) => (
+                          <div key={med.medicine_name} className="flex justify-between items-center">
+                            <span className="text-sm">{med.medicine_name}</span>
+                            <span className="text-sm font-semibold">{med.usage_count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -272,18 +299,38 @@ function Reports() {
             <CardContent>
               {loadingFinancial ? (
                 <Skeleton className="h-64 w-full" />
-              ) : financialSummary && typeof financialSummary === 'object' ? (
+              ) : financialSummary ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Revenue</p>
-                      <p className="text-2xl font-bold">₹{(financialSummary as any).revenue?.total_revenue || 0}</p>
+                      <p className="text-2xl font-bold">₹{financialSummary.total_revenue || 0}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Costs</p>
-                      <p className="text-2xl font-bold">₹{(financialSummary as any).costs?.total_costs || 0}</p>
+                      <p className="text-sm text-muted-foreground">Total Appointments</p>
+                      <p className="text-2xl font-bold">{financialSummary.total_appointments || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg per Appointment</p>
+                      <p className="text-2xl font-bold">₹{financialSummary.avg_revenue_per_appointment?.toFixed(2) || 0}</p>
                     </div>
                   </div>
+                  {financialSummary.revenue_by_period && financialSummary.revenue_by_period.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium mb-2">Revenue by Period</p>
+                      <div className="space-y-2">
+                        {financialSummary.revenue_by_period.map((period) => (
+                          <div key={period.period} className="flex justify-between items-center">
+                            <span className="text-sm">{period.period}</span>
+                            <div className="text-right">
+                              <span className="text-sm font-semibold">₹{period.revenue}</span>
+                              <span className="text-xs text-muted-foreground ml-2">({period.appointment_count} appts)</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -304,33 +351,44 @@ function Reports() {
           <Card>
             <CardHeader>
               <CardTitle>Expiry Alerts</CardTitle>
-              <CardDescription>Medicines expiring soon</CardDescription>
+              <CardDescription>Remidies expiring soon</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingExpiry ? (
                 <Skeleton className="h-64 w-full" />
-              ) : expiryAlerts && typeof expiryAlerts === 'object' && 'summary' in expiryAlerts ? (
+              ) : expiryAlerts ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Expiring Soon (1-7 days)</p>
-                      <p className="text-2xl font-bold text-orange-500">
-                        {(expiryAlerts as any).summary?.expiring_soon_count || 0}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Days Threshold</p>
+                      <p className="text-2xl font-bold">{expiryAlerts.days_threshold}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Expiring Later (8-30 days)</p>
-                      <p className="text-2xl font-bold text-yellow-500">
-                        {(expiryAlerts as any).summary?.expiring_later_count || 0}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Already Expired</p>
-                      <p className="text-2xl font-bold text-red-500">
-                        {(expiryAlerts as any).summary?.expired_count || 0}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Total Expiring Items</p>
+                      <p className="text-2xl font-bold text-orange-500">{expiryAlerts.total_items}</p>
                     </div>
                   </div>
+                  {expiryAlerts.items && expiryAlerts.items.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium mb-2">Expiring Remidies</p>
+                      <div className="space-y-2">
+                        {expiryAlerts.items.slice(0, 10).map((item) => (
+                          <div key={`${item.medicine_id}-${item.batch_number}`} className="flex justify-between items-center p-2 rounded-md bg-orange-50 dark:bg-orange-950">
+                            <div>
+                              <span className="text-sm font-medium">{item.medicine_name}</span>
+                              <span className="text-xs text-muted-foreground ml-2">Batch: {item.batch_number}</span>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold">
+                                {item.days_until_expiry} days
+                              </p>
+                              <p className="text-xs text-muted-foreground">{item.expiry_date}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Skeleton className="h-64 w-full" />

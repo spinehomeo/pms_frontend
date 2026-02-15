@@ -54,28 +54,38 @@ export const columns: ColumnDef<PatientPublic>[] = [
     },
   },
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorKey: "cnic",
+    header: "CNIC",
     cell: ({ row }) => {
-      const email = row.original.email
+      const cnic = row.original.cnic
       return (
-        <span className={cn("text-muted-foreground", !email && "italic")}>
-          {email || "No email"}
+        <span className={cn("text-muted-foreground", !cnic && "italic")}>
+          {cnic || "-"}
         </span>
       )
     },
   },
   {
-    accessorKey: "last_visit_date",
-    header: "Last Visit",
+    accessorKey: "city",
+    header: "City",
     cell: ({ row }) => {
-      const lastVisit = row.original.last_visit_date
-      return lastVisit ? (
-        <span className="text-sm text-muted-foreground">
-          {new Date(lastVisit).toLocaleDateString()}
+      const city = row.original.city
+      return (
+        <span className={cn("text-muted-foreground", !city && "italic")}>
+          {city || "-"}
         </span>
-      ) : (
-        <span className="text-muted-foreground italic">Never</span>
+      )
+    },
+  },
+  {
+    accessorKey: "referred_by",
+    header: "Referred By",
+    cell: ({ row }) => {
+      const referredBy = row.original.referred_by
+      return (
+        <span className={cn("text-muted-foreground", !referredBy && "italic")}>
+          {referredBy || "-"}
+        </span>
       )
     },
   },

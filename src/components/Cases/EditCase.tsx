@@ -1,12 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Pencil } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { CasesService } from "@/client"
-import type { PatientCasePublic, CaseCreate } from "@/client/CasesService"
+import type { PatientCasePublic, CaseUpdate } from "@/client/CasesService"
+import { DoctorPreferencesService } from "@/client/DoctorPreferencesService"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,20 +34,13 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  chief_complaint: z.string().min(1, { message: "Chief complaint is required" }).optional(),
-  duration: z.string().min(1, { message: "Duration is required" }).optional(),
-  onset: z.string().optional(),
-  location: z.string().optional(),
-  sensation: z.string().optional(),
-  modalities: z.string().optional(),
-  concomitants: z.string().optional(),
-  generals: z.string().optional(),
-  mentals: z.string().optional(),
+  duration: z.string().optional(),
   physicals: z.string().optional(),
-  miasm_assessment: z.string().optional(),
-  vitality_assessment: z.string().optional(),
-  case_notes: z.string().optional(),
-})
+  noted_complaint_doctor: z.string().optional(),
+  peculiar_symptoms: z.string().optional(),
+  causation: z.string().optional(),
+  lab_reports: z.string().optional(),
+}).catchall(z.string()) // Allow custom fields
 
 type FormData = z.infer<typeof formSchema>
 
@@ -60,29 +54,52 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
+  // Fetch doctor preferences for custom fields
+  const { data: preferencesData } = useQuery({
+    queryKey: ["doctor-preferences"],
+    queryFn: () => DoctorPreferencesService.getPreferences(),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  // Prepare default values including custom fields
+  const getDefaultValues = () => {
+    const baseValues: any = {
+      duration: caseItem.duration ?? "",
+      physicals: caseItem.physicals ?? "",
+      noted_complaint_doctor: caseItem.noted_complaint_doctor ?? "",
+      peculiar_symptoms: caseItem.peculiar_symptoms ?? "",
+      causation: caseItem.causation ?? "",
+      lab_reports: caseItem.lab_reports ?? "",
+    }
+
+    // Add custom fields from caseItem
+    if (caseItem.custom_fields) {
+      Object.entries(caseItem.custom_fields).forEach(([key, value]) => {
+        baseValues[key] = value
+      })
+    }
+
+    return baseValues
+  }
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: {
-      chief_complaint: caseItem.chief_complaint,
-      duration: caseItem.duration,
-      onset: caseItem.onset ?? undefined,
-      location: caseItem.location ?? undefined,
-      sensation: caseItem.sensation ?? undefined,
-      modalities: caseItem.modalities ?? undefined,
-      concomitants: caseItem.concomitants ?? undefined,
-      generals: caseItem.generals ?? undefined,
-      mentals: caseItem.mentals ?? undefined,
-      physicals: caseItem.physicals ?? undefined,
-      miasm_assessment: caseItem.miasm_assessment ?? undefined,
-      vitality_assessment: caseItem.vitality_assessment ?? undefined,
-      case_notes: caseItem.case_notes ?? undefined,
-    },
+    defaultValues: getDefaultValues(),
   })
 
+  // Reset form with custom fields when preferences load
+  useEffect(() => {
+    if (isOpen && preferencesData) {
+      form.reset(getDefaultValues())
+    }
+  }, [isOpen, preferencesData])
+
   const mutation = useMutation({
-    mutationFn: (data: CaseCreate) =>
+    mutationFn: (data: CaseUpdate) =>
       CasesService.updateCase({ caseId: caseItem.id, requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Case updated successfully")
@@ -96,21 +113,24 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
   })
 
   const onSubmit = (data: FormData) => {
-    const caseData: CaseCreate = {
-      patient_id: caseItem.patient_id, // Keep existing patient_id
-      chief_complaint: data.chief_complaint || caseItem.chief_complaint,
-      duration: data.duration || caseItem.duration,
-      onset: data.onset || undefined,
-      location: data.location || undefined,
-      sensation: data.sensation || undefined,
-      modalities: data.modalities || undefined,
-      concomitants: data.concomitants || undefined,
-      generals: data.generals || undefined,
-      mentals: data.mentals || undefined,
+    // Extract custom fields (any field not in the standard schema)
+    const standardFields = ['duration', 'physicals', 'noted_complaint_doctor', 'peculiar_symptoms', 'causation', 'lab_reports']
+    const customFields: Record<string, string> = {}
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!standardFields.includes(key) && value) {
+        customFields[key] = value as string
+      }
+    })
+
+    const caseData: CaseUpdate = {
+      duration: data.duration || undefined,
       physicals: data.physicals || undefined,
-      miasm_assessment: data.miasm_assessment || undefined,
-      vitality_assessment: data.vitality_assessment || undefined,
-      case_notes: data.case_notes || undefined,
+      noted_complaint_doctor: data.noted_complaint_doctor || undefined,
+      peculiar_symptoms: data.peculiar_symptoms || undefined,
+      causation: data.causation || undefined,
+      lab_reports: data.lab_reports || undefined,
+      custom_fields: Object.keys(customFields).length > 0 ? customFields : undefined,
     }
     mutation.mutate(caseData)
   }
@@ -134,130 +154,23 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="chief_complaint"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Chief Complaint</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="onset"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Onset</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="bg-muted p-3 rounded-md text-sm text-muted-foreground mb-2">
+                <p><strong>Patient:</strong> {caseItem.patient_name || caseItem.patient_id}</p>
+                <p><strong>Case Number:</strong> {caseItem.case_number}</p>
+                <p><strong>Chief Complaint:</strong> {caseItem.chief_complaint_patient}</p>
               </div>
 
               <FormField
                 control={form.control}
-                name="sensation"
+                name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sensation</FormLabel>
+                    <FormLabel>Duration</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="modalities"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Modalities</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={2} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="concomitants"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Concomitants</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={2} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="generals"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Generals</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={2} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="mentals"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mentals</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={2} />
+                      <Input
+                        placeholder="e.g., 3 days, 2 weeks"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,9 +182,13 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
                 name="physicals"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Physicals</FormLabel>
+                    <FormLabel>Physical Examination</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} />
+                      <Textarea
+                        placeholder="Physical examination findings"
+                        {...field}
+                        rows={2}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -280,12 +197,16 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
 
               <FormField
                 control={form.control}
-                name="miasm_assessment"
+                name="noted_complaint_doctor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Miasm Assessment</FormLabel>
+                    <FormLabel>Noted Complaint (Doctor's Assessment)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} />
+                      <Textarea
+                        placeholder="Doctor's professional assessment"
+                        {...field}
+                        rows={2}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -294,12 +215,16 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
 
               <FormField
                 control={form.control}
-                name="vitality_assessment"
+                name="peculiar_symptoms"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vitality Assessment</FormLabel>
+                    <FormLabel>Peculiar Symptoms</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} />
+                      <Textarea
+                        placeholder="Unique or unusual symptoms"
+                        {...field}
+                        rows={2}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -308,17 +233,78 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
 
               <FormField
                 control={form.control}
-                name="case_notes"
+                name="causation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Case Notes</FormLabel>
+                    <FormLabel>Causation</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={3} />
+                      <Textarea
+                        placeholder="Possible causes or triggers"
+                        {...field}
+                        rows={2}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="lab_reports"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lab Reports</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Laboratory test results"
+                        {...field}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Dynamic Custom Fields */}
+              {preferencesData?.custom_fields && preferencesData.custom_fields.length > 0 && (
+                <>
+                  <div className="col-span-full mt-4 border-t pt-4">
+                    <h3 className="text-sm font-medium mb-3">Custom Fields</h3>
+                  </div>
+                  {preferencesData.custom_fields.map((customField) => (
+                    <FormField
+                      key={customField.field_name}
+                      control={form.control}
+                      name={customField.field_name as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {customField.display_name}
+                            {customField.is_required && <span className="text-destructive">*</span>}
+                          </FormLabel>
+                          <FormControl>
+                            {customField.field_type === 'textarea' ? (
+                              <Textarea
+                                placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                {...field}
+                                rows={2}
+                              />
+                            ) : (
+                              <Input
+                                placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                {...field}
+                              />
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </>
+              )}
             </div>
 
             <DialogFooter>

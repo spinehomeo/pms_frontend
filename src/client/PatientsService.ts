@@ -27,6 +27,7 @@ export interface PatientCreate {
   medical_history?: string;
   drug_allergies?: string;
   family_history?: string;
+  referred_by?: string; // Added - person who referred the patient
 }
 
 export interface PatientUpdate {
@@ -41,6 +42,7 @@ export interface PatientUpdate {
   medical_history?: string;
   drug_allergies?: string;
   family_history?: string;
+  referred_by?: string; // Added - person who referred the patient
 }
 
 export interface PatientsCreatePatientData {
@@ -71,6 +73,7 @@ export interface PatientPublic {
   medical_history?: string;
   drug_allergies?: string;
   family_history?: string;
+  referred_by?: string; // Added - person who referred the patient
   doctor_id: string;
   created_date: string;
   is_active?: boolean; // Added per backend guide

@@ -72,7 +72,7 @@ const EditMedicine = ({ stock, onSuccess }: EditMedicineProps) => {
     mutationFn: (data: DoctorMedicineStockUpdate) =>
       MedicinesService.updateStockItem({ stockId: stock.id, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Medicine stock updated successfully")
+      showSuccessToast("Remidies stock updated successfully")
       setIsOpen(false)
       onSuccess()
     },
@@ -108,9 +108,9 @@ const EditMedicine = ({ stock, onSuccess }: EditMedicineProps) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Edit Medicine Stock</DialogTitle>
+              <DialogTitle>Edit Remidies Stock</DialogTitle>
               <DialogDescription>
-                Update the medicine stock details below.
+                Update the remidies stock details below.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">

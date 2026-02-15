@@ -53,6 +53,7 @@ const formSchema = z.object({
   medical_history: z.string().optional(),
   drug_allergies: z.string().optional(),
   family_history: z.string().optional(),
+  referred_by: z.string().optional().or(z.literal("")),  // Added - Referral source
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -80,6 +81,7 @@ const AddPatient = () => {
       medical_history: "",
       drug_allergies: "",
       family_history: "",
+      referred_by: "",
     },
   })
 
@@ -112,6 +114,7 @@ const AddPatient = () => {
       medical_history: data.medical_history || undefined,
       drug_allergies: data.drug_allergies || undefined,
       family_history: data.family_history || undefined,
+      referred_by: data.referred_by || undefined,
     }
     mutation.mutate(patientData)
   }
@@ -399,15 +402,15 @@ const AddPatient = () => {
 
               <FormField
                 control={form.control}
-                name="notes"
+                name="referred_by"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>Referred By</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Additional Notes"
+                      <Input
+                        placeholder="Name or contact of referrer"
+                        type="text"
                         {...field}
-                        rows={2}
                       />
                     </FormControl>
                     <FormMessage />

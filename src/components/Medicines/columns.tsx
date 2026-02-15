@@ -16,7 +16,7 @@ export const columns: ColumnDef<DoctorMedicineStockPublic>[] = [
   },
   {
     accessorKey: "medicine_name",
-    header: "Medicine",
+    header: "Remidies",
     cell: ({ row }) => (
       <span className="font-medium">{row.original.medicine_name || "Unknown"}</span>
     ),
@@ -57,12 +57,12 @@ export const columns: ColumnDef<DoctorMedicineStockPublic>[] = [
     cell: ({ row }) => {
       const expiry = row.original.expiry_date
       if (!expiry) return <span className="text-muted-foreground italic">No expiry</span>
-      
+
       const expiryDate = new Date(expiry)
       const today = new Date()
       const isExpired = expiryDate < today
       const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-      
+
       return (
         <span className={cn(
           "text-sm",

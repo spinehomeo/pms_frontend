@@ -34,16 +34,16 @@ function CasesTableContent() {
 
   const filteredCases = useMemo(() => {
     if (!searchQuery.trim()) return cases.data
-    
+
     const query = searchQuery.toLowerCase()
     return cases.data.filter((caseItem) => {
       return (
         caseItem.case_number?.toLowerCase().includes(query) ||
         caseItem.patient_name?.toLowerCase().includes(query) ||
-        caseItem.chief_complaint?.toLowerCase().includes(query) ||
-        caseItem.duration?.toLowerCase().includes(query) ||
-        caseItem.onset?.toLowerCase().includes(query) ||
-        caseItem.location?.toLowerCase().includes(query)
+        caseItem.patient_phone?.toLowerCase().includes(query) ||
+        caseItem.patient_city?.toLowerCase().includes(query) ||
+        caseItem.chief_complaint_patient?.toLowerCase().includes(query) ||
+        caseItem.duration?.toLowerCase().includes(query)
       )
     })
   }, [cases.data, searchQuery])
@@ -66,7 +66,7 @@ function CasesTableContent() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by number, patient, complaint..."
+            placeholder="Search by case #, patient name, phone, city, complaint..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"

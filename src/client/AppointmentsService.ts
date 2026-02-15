@@ -1,9 +1,15 @@
 // Temporary AppointmentsService until SDK is regenerated
-import type { CancelablePromise } from './core/CancelablePromise';
-import { OpenAPI } from './core/OpenAPI';
-import { request as __request } from './core/request';
+import type { CancelablePromise } from "./core/CancelablePromise";
+import { OpenAPI } from "./core/OpenAPI";
+import { request as __request } from "./core/request";
 
-export type AppointmentStatus = "scheduled" | "confirmed" | "in_progress" | "completed" | "cancelled" | "no_show";
+export type AppointmentStatus =
+  | "scheduled"
+  | "confirmed"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "no_show";
 
 export interface AppointmentsReadAppointmentsData {
   skip?: number;
@@ -54,6 +60,24 @@ export interface AppointmentsDeleteAppointmentData {
   appointmentId: string;
 }
 
+export interface AppointmentsValidateAvailabilityData {
+  appointment_date: string;
+  appointment_time: string;
+  duration_minutes?: number;
+}
+
+export interface AvailabilityValidationResponse {
+  available: boolean;
+  message: string;
+}
+
+export interface PatientBookAppointmentData {
+  doctor_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  reason?: string;
+}
+
 export interface AppointmentPublic {
   id: string;
   patient_id: string;
@@ -97,10 +121,12 @@ export interface AppointmentUpdate {
 }
 
 export class AppointmentsService {
-  public static readAppointments(data: AppointmentsReadAppointmentsData = {}): CancelablePromise<AppointmentsPublic> {
+  public static readAppointments(
+    data: AppointmentsReadAppointmentsData = {},
+  ): CancelablePromise<AppointmentsPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
-      url: '/appointments/',
+      method: "GET",
+      url: "/appointments/",
       query: {
         skip: data.skip,
         limit: data.limit,
@@ -111,110 +137,159 @@ export class AppointmentsService {
         to_date: data.to_date,
       },
       errors: {
-        422: 'Validation Error',
-        403: 'Forbidden',
-      }
+        422: "Validation Error",
+        403: "Forbidden",
+      },
     });
   }
 
   public static readTodayAppointments(): CancelablePromise<AppointmentsPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
-      url: '/appointments/today',
+      method: "GET",
+      url: "/appointments/today",
       errors: {
-        403: 'Forbidden',
-      }
+        403: "Forbidden",
+      },
     });
   }
 
-  public static readUpcomingAppointments(days: number = 7): CancelablePromise<any> {
+  public static readUpcomingAppointments(
+    days: number = 7,
+  ): CancelablePromise<any> {
     return __request(OpenAPI, {
-      method: 'GET',
-      url: '/appointments/upcoming',
+      method: "GET",
+      url: "/appointments/upcoming",
       query: {
         days,
       },
       errors: {
-        403: 'Forbidden',
-      }
+        403: "Forbidden",
+      },
     });
   }
 
-  public static readAppointment(data: AppointmentsReadAppointmentData): CancelablePromise<AppointmentPublic> {
+  public static readAppointment(
+    data: AppointmentsReadAppointmentData,
+  ): CancelablePromise<AppointmentPublic> {
     return __request(OpenAPI, {
-      method: 'GET',
+      method: "GET",
       url: `/appointments/${data.appointmentId}`,
       errors: {
-        404: 'Appointment not found',
-        403: 'Forbidden',
-      }
+        404: "Appointment not found",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static createAppointment(data: AppointmentsCreateAppointmentData): CancelablePromise<AppointmentPublic> {
+  public static createAppointment(
+    data: AppointmentsCreateAppointmentData,
+  ): CancelablePromise<AppointmentPublic> {
     return __request(OpenAPI, {
-      method: 'POST',
-      url: '/appointments/',
+      method: "POST",
+      url: "/appointments/",
       body: data.requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
       errors: {
-        422: 'Validation Error',
-        403: 'Forbidden',
-        400: 'Bad Request',
-        409: 'Conflict',
-      }
+        422: "Validation Error",
+        403: "Forbidden",
+        400: "Bad Request",
+        409: "Conflict",
+      },
     });
   }
 
-  public static updateAppointment(data: AppointmentsUpdateAppointmentData): CancelablePromise<AppointmentPublic> {
+  public static updateAppointment(
+    data: AppointmentsUpdateAppointmentData,
+  ): CancelablePromise<AppointmentPublic> {
     return __request(OpenAPI, {
-      method: 'PUT',
+      method: "PUT",
       url: `/appointments/${data.appointmentId}`,
       body: data.requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
       errors: {
-        422: 'Validation Error',
-        404: 'Appointment not found',
-        403: 'Forbidden',
-        400: 'Bad Request',
-        409: 'Conflict',
-      }
+        422: "Validation Error",
+        404: "Appointment not found",
+        403: "Forbidden",
+        400: "Bad Request",
+        409: "Conflict",
+      },
     });
   }
 
-  public static updateAppointmentStatus(data: AppointmentsUpdateStatusData): CancelablePromise<AppointmentPublic> {
+  public static updateAppointmentStatus(
+    data: AppointmentsUpdateStatusData,
+  ): CancelablePromise<AppointmentPublic> {
     return __request(OpenAPI, {
-      method: 'PATCH',
+      method: "PATCH",
       url: `/appointments/${data.appointmentId}/status`,
       query: {
         status: data.status,
       },
       errors: {
-        404: 'Appointment not found',
-        403: 'Forbidden',
-      }
+        404: "Appointment not found",
+        403: "Forbidden",
+      },
     });
   }
 
-  public static deleteAppointment(data: AppointmentsDeleteAppointmentData): CancelablePromise<{ message: string }> {
+  public static deleteAppointment(
+    data: AppointmentsDeleteAppointmentData,
+  ): CancelablePromise<{ message: string }> {
     return __request(OpenAPI, {
-      method: 'DELETE',
+      method: "DELETE",
       url: `/appointments/${data.appointmentId}`,
       errors: {
-        404: 'Appointment not found',
-        403: 'Forbidden',
-      }
+        404: "Appointment not found",
+        403: "Forbidden",
+      },
     });
   }
 
   public static checkAvailability(checkDate: string): CancelablePromise<any> {
     return __request(OpenAPI, {
-      method: 'GET',
+      method: "GET",
       url: `/appointments/availability/${checkDate}`,
       errors: {
-        403: 'Forbidden',
-      }
+        403: "Forbidden",
+      },
+    });
+  }
+
+  public static validateAvailability(
+    data: AppointmentsValidateAvailabilityData,
+  ): CancelablePromise<AvailabilityValidationResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/appointments/validate-availability",
+      query: {
+        appointment_date: data.appointment_date,
+        appointment_time: data.appointment_time,
+        duration_minutes: data.duration_minutes,
+      },
+      errors: {
+        403: "Forbidden",
+        422: "Validation Error",
+      },
+    });
+  }
+
+  public static patientBookAppointment(
+    data: PatientBookAppointmentData,
+  ): CancelablePromise<AppointmentPublic> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/appointments/patient/book",
+      query: {
+        doctor_id: data.doctor_id,
+        appointment_date: data.appointment_date,
+        appointment_time: data.appointment_time,
+        reason: data.reason,
+      },
+      errors: {
+        403: "Forbidden",
+        409: "Conflict",
+        422: "Validation Error",
+      },
     });
   }
 }
-

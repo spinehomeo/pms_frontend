@@ -22,9 +22,17 @@ import { Route as LayoutPatientsRouteImport } from './routes/_layout/patients'
 import { Route as LayoutMedicinesRouteImport } from './routes/_layout/medicines'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutFollowupsRouteImport } from './routes/_layout/followups'
+import { Route as LayoutCoreSettingsRouteImport } from './routes/_layout/core-settings'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
+import { Route as LayoutAvailabilityRouteImport } from './routes/_layout/availability'
 import { Route as LayoutAppointmentsRouteImport } from './routes/_layout/appointments'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutWebContentIndexRouteImport } from './routes/_layout/web-content/index'
+import { Route as LayoutWebContentTestimonialsRouteImport } from './routes/_layout/web-content/testimonials'
+import { Route as LayoutWebContentServicesRouteImport } from './routes/_layout/web-content/services'
+import { Route as LayoutWebContentHeroSectionRouteImport } from './routes/_layout/web-content/hero-section'
+import { Route as LayoutWebContentContactInfoRouteImport } from './routes/_layout/web-content/contact-info'
+import { Route as LayoutWebContentAboutDoctorRouteImport } from './routes/_layout/web-content/about-doctor'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -90,9 +98,19 @@ const LayoutFollowupsRoute = LayoutFollowupsRouteImport.update({
   path: '/followups',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutCoreSettingsRoute = LayoutCoreSettingsRouteImport.update({
+  id: '/core-settings',
+  path: '/core-settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutCasesRoute = LayoutCasesRouteImport.update({
   id: '/cases',
   path: '/cases',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAvailabilityRoute = LayoutAvailabilityRouteImport.update({
+  id: '/availability',
+  path: '/availability',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAppointmentsRoute = LayoutAppointmentsRouteImport.update({
@@ -105,6 +123,41 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutWebContentIndexRoute = LayoutWebContentIndexRouteImport.update({
+  id: '/web-content/',
+  path: '/web-content/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutWebContentTestimonialsRoute =
+  LayoutWebContentTestimonialsRouteImport.update({
+    id: '/web-content/testimonials',
+    path: '/web-content/testimonials',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutWebContentServicesRoute =
+  LayoutWebContentServicesRouteImport.update({
+    id: '/web-content/services',
+    path: '/web-content/services',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutWebContentHeroSectionRoute =
+  LayoutWebContentHeroSectionRouteImport.update({
+    id: '/web-content/hero-section',
+    path: '/web-content/hero-section',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutWebContentContactInfoRoute =
+  LayoutWebContentContactInfoRouteImport.update({
+    id: '/web-content/contact-info',
+    path: '/web-content/contact-info',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutWebContentAboutDoctorRoute =
+  LayoutWebContentAboutDoctorRouteImport.update({
+    id: '/web-content/about-doctor',
+    path: '/web-content/about-doctor',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -113,7 +166,9 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/appointments': typeof LayoutAppointmentsRoute
+  '/availability': typeof LayoutAvailabilityRoute
   '/cases': typeof LayoutCasesRoute
+  '/core-settings': typeof LayoutCoreSettingsRoute
   '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
   '/medicines': typeof LayoutMedicinesRoute
@@ -122,6 +177,12 @@ export interface FileRoutesByFullPath {
   '/reports': typeof LayoutReportsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/web-content/about-doctor': typeof LayoutWebContentAboutDoctorRoute
+  '/web-content/contact-info': typeof LayoutWebContentContactInfoRoute
+  '/web-content/hero-section': typeof LayoutWebContentHeroSectionRoute
+  '/web-content/services': typeof LayoutWebContentServicesRoute
+  '/web-content/testimonials': typeof LayoutWebContentTestimonialsRoute
+  '/web-content': typeof LayoutWebContentIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -130,7 +191,9 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/appointments': typeof LayoutAppointmentsRoute
+  '/availability': typeof LayoutAvailabilityRoute
   '/cases': typeof LayoutCasesRoute
+  '/core-settings': typeof LayoutCoreSettingsRoute
   '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
   '/medicines': typeof LayoutMedicinesRoute
@@ -139,6 +202,12 @@ export interface FileRoutesByTo {
   '/reports': typeof LayoutReportsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/web-content/about-doctor': typeof LayoutWebContentAboutDoctorRoute
+  '/web-content/contact-info': typeof LayoutWebContentContactInfoRoute
+  '/web-content/hero-section': typeof LayoutWebContentHeroSectionRoute
+  '/web-content/services': typeof LayoutWebContentServicesRoute
+  '/web-content/testimonials': typeof LayoutWebContentTestimonialsRoute
+  '/web-content': typeof LayoutWebContentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,7 +218,9 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/appointments': typeof LayoutAppointmentsRoute
+  '/_layout/availability': typeof LayoutAvailabilityRoute
   '/_layout/cases': typeof LayoutCasesRoute
+  '/_layout/core-settings': typeof LayoutCoreSettingsRoute
   '/_layout/followups': typeof LayoutFollowupsRoute
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/medicines': typeof LayoutMedicinesRoute
@@ -158,6 +229,12 @@ export interface FileRoutesById {
   '/_layout/reports': typeof LayoutReportsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/web-content/about-doctor': typeof LayoutWebContentAboutDoctorRoute
+  '/_layout/web-content/contact-info': typeof LayoutWebContentContactInfoRoute
+  '/_layout/web-content/hero-section': typeof LayoutWebContentHeroSectionRoute
+  '/_layout/web-content/services': typeof LayoutWebContentServicesRoute
+  '/_layout/web-content/testimonials': typeof LayoutWebContentTestimonialsRoute
+  '/_layout/web-content/': typeof LayoutWebContentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,7 +245,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/appointments'
+    | '/availability'
     | '/cases'
+    | '/core-settings'
     | '/followups'
     | '/items'
     | '/medicines'
@@ -177,6 +256,12 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/'
+    | '/web-content/about-doctor'
+    | '/web-content/contact-info'
+    | '/web-content/hero-section'
+    | '/web-content/services'
+    | '/web-content/testimonials'
+    | '/web-content'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -185,7 +270,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/appointments'
+    | '/availability'
     | '/cases'
+    | '/core-settings'
     | '/followups'
     | '/items'
     | '/medicines'
@@ -194,6 +281,12 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/'
+    | '/web-content/about-doctor'
+    | '/web-content/contact-info'
+    | '/web-content/hero-section'
+    | '/web-content/services'
+    | '/web-content/testimonials'
+    | '/web-content'
   id:
     | '__root__'
     | '/_layout'
@@ -203,7 +296,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_layout/admin'
     | '/_layout/appointments'
+    | '/_layout/availability'
     | '/_layout/cases'
+    | '/_layout/core-settings'
     | '/_layout/followups'
     | '/_layout/items'
     | '/_layout/medicines'
@@ -212,6 +307,12 @@ export interface FileRouteTypes {
     | '/_layout/reports'
     | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/web-content/about-doctor'
+    | '/_layout/web-content/contact-info'
+    | '/_layout/web-content/hero-section'
+    | '/_layout/web-content/services'
+    | '/_layout/web-content/testimonials'
+    | '/_layout/web-content/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,11 +416,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutFollowupsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/core-settings': {
+      id: '/_layout/core-settings'
+      path: '/core-settings'
+      fullPath: '/core-settings'
+      preLoaderRoute: typeof LayoutCoreSettingsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/cases': {
       id: '/_layout/cases'
       path: '/cases'
       fullPath: '/cases'
       preLoaderRoute: typeof LayoutCasesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/availability': {
+      id: '/_layout/availability'
+      path: '/availability'
+      fullPath: '/availability'
+      preLoaderRoute: typeof LayoutAvailabilityRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/appointments': {
@@ -336,13 +451,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/web-content/': {
+      id: '/_layout/web-content/'
+      path: '/web-content'
+      fullPath: '/web-content'
+      preLoaderRoute: typeof LayoutWebContentIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/web-content/testimonials': {
+      id: '/_layout/web-content/testimonials'
+      path: '/web-content/testimonials'
+      fullPath: '/web-content/testimonials'
+      preLoaderRoute: typeof LayoutWebContentTestimonialsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/web-content/services': {
+      id: '/_layout/web-content/services'
+      path: '/web-content/services'
+      fullPath: '/web-content/services'
+      preLoaderRoute: typeof LayoutWebContentServicesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/web-content/hero-section': {
+      id: '/_layout/web-content/hero-section'
+      path: '/web-content/hero-section'
+      fullPath: '/web-content/hero-section'
+      preLoaderRoute: typeof LayoutWebContentHeroSectionRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/web-content/contact-info': {
+      id: '/_layout/web-content/contact-info'
+      path: '/web-content/contact-info'
+      fullPath: '/web-content/contact-info'
+      preLoaderRoute: typeof LayoutWebContentContactInfoRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/web-content/about-doctor': {
+      id: '/_layout/web-content/about-doctor'
+      path: '/web-content/about-doctor'
+      fullPath: '/web-content/about-doctor'
+      preLoaderRoute: typeof LayoutWebContentAboutDoctorRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutAppointmentsRoute: typeof LayoutAppointmentsRoute
+  LayoutAvailabilityRoute: typeof LayoutAvailabilityRoute
   LayoutCasesRoute: typeof LayoutCasesRoute
+  LayoutCoreSettingsRoute: typeof LayoutCoreSettingsRoute
   LayoutFollowupsRoute: typeof LayoutFollowupsRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutMedicinesRoute: typeof LayoutMedicinesRoute
@@ -351,12 +510,20 @@ interface LayoutRouteChildren {
   LayoutReportsRoute: typeof LayoutReportsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutWebContentAboutDoctorRoute: typeof LayoutWebContentAboutDoctorRoute
+  LayoutWebContentContactInfoRoute: typeof LayoutWebContentContactInfoRoute
+  LayoutWebContentHeroSectionRoute: typeof LayoutWebContentHeroSectionRoute
+  LayoutWebContentServicesRoute: typeof LayoutWebContentServicesRoute
+  LayoutWebContentTestimonialsRoute: typeof LayoutWebContentTestimonialsRoute
+  LayoutWebContentIndexRoute: typeof LayoutWebContentIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutAppointmentsRoute: LayoutAppointmentsRoute,
+  LayoutAvailabilityRoute: LayoutAvailabilityRoute,
   LayoutCasesRoute: LayoutCasesRoute,
+  LayoutCoreSettingsRoute: LayoutCoreSettingsRoute,
   LayoutFollowupsRoute: LayoutFollowupsRoute,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutMedicinesRoute: LayoutMedicinesRoute,
@@ -365,6 +532,12 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutReportsRoute: LayoutReportsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
+  LayoutWebContentAboutDoctorRoute: LayoutWebContentAboutDoctorRoute,
+  LayoutWebContentContactInfoRoute: LayoutWebContentContactInfoRoute,
+  LayoutWebContentHeroSectionRoute: LayoutWebContentHeroSectionRoute,
+  LayoutWebContentServicesRoute: LayoutWebContentServicesRoute,
+  LayoutWebContentTestimonialsRoute: LayoutWebContentTestimonialsRoute,
+  LayoutWebContentIndexRoute: LayoutWebContentIndexRoute,
 }
 
 const LayoutRouteWithChildren =

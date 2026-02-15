@@ -97,11 +97,11 @@ const ViewPrescription = ({ prescription }: ViewPrescriptionProps) => {
               <>
                 <Separator />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-3">Medicines</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Remidies</p>
                   <div className="space-y-2">
                     {prescription.medicines.map((medicine, index) => (
                       <div key={index} className="p-3 border rounded-lg">
-                        <p className="font-medium">{medicine.medicine_name || "Unknown Medicine"}</p>
+                        <p className="font-medium">{medicine.medicine_name || "Unknown Remidies"}</p>
                         <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-muted-foreground">
                           <span>Potency: {medicine.potency || "N/A"}</span>
                           <span>Form: {medicine.form || "N/A"}</span>

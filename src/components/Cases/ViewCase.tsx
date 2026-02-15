@@ -57,12 +57,19 @@ const ViewCase = ({ caseItem }: ViewCaseProps) => {
               </p>
             </div>
 
+            {caseItem.appointment_id && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Linked Appointment</p>
+                <p className="text-sm font-mono">{caseItem.appointment_id}</p>
+              </div>
+            )}
+
             <Separator />
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Chief Complaint</p>
-                <p className="text-base font-semibold">{caseItem.chief_complaint}</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Chief Complaint (Patient's Words)</p>
+                <p className="text-base font-semibold">{caseItem.chief_complaint_patient}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">Duration</p>
@@ -70,82 +77,56 @@ const ViewCase = ({ caseItem }: ViewCaseProps) => {
               </div>
             </div>
 
-            {caseItem.onset && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Onset</p>
-                <p className="text-base">{caseItem.onset}</p>
-              </div>
-            )}
-
-            {caseItem.location && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Location</p>
-                <p className="text-base">{caseItem.location}</p>
-              </div>
-            )}
-
-            {caseItem.sensation && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Sensation</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.sensation}</p>
-              </div>
-            )}
-
-            {caseItem.modalities && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Modalities</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.modalities}</p>
-              </div>
-            )}
-
-            {caseItem.concomitants && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Concomitants</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.concomitants}</p>
-              </div>
-            )}
-
-            {caseItem.generals && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Generals</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.generals}</p>
-              </div>
-            )}
-
-            {caseItem.mentals && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Mentals</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.mentals}</p>
-              </div>
-            )}
-
             {caseItem.physicals && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Physicals</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Physical Examination</p>
                 <p className="text-base whitespace-pre-wrap">{caseItem.physicals}</p>
               </div>
             )}
 
-            {caseItem.miasm_assessment && (
+            {caseItem.noted_complaint_doctor && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Miasm Assessment</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.miasm_assessment}</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Noted Complaint (Doctor's Assessment)</p>
+                <p className="text-base whitespace-pre-wrap">{caseItem.noted_complaint_doctor}</p>
               </div>
             )}
 
-            {caseItem.vitality_assessment && (
+            {caseItem.peculiar_symptoms && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Vitality Assessment</p>
-                <p className="text-base whitespace-pre-wrap">{caseItem.vitality_assessment}</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Peculiar Symptoms</p>
+                <p className="text-base whitespace-pre-wrap">{caseItem.peculiar_symptoms}</p>
               </div>
             )}
 
-            {caseItem.case_notes && (
+            {caseItem.causation && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Causation</p>
+                <p className="text-base whitespace-pre-wrap">{caseItem.causation}</p>
+              </div>
+            )}
+
+            {caseItem.lab_reports && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Lab Reports</p>
+                <p className="text-base whitespace-pre-wrap">{caseItem.lab_reports}</p>
+              </div>
+            )}
+
+            {caseItem.custom_fields && Object.keys(caseItem.custom_fields).length > 0 && (
               <>
                 <Separator />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Case Notes</p>
-                  <p className="text-base whitespace-pre-wrap">{caseItem.case_notes}</p>
+                  <p className="text-sm font-semibold mb-4">Custom Fields</p>
+                  <div className="grid gap-4">
+                    {Object.entries(caseItem.custom_fields).map(([key, value]) => (
+                      <div key={key}>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                          {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </p>
+                        <p className="text-base whitespace-pre-wrap">{value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
