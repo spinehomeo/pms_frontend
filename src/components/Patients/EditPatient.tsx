@@ -35,6 +35,7 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   full_name: z.string().min(1, { message: "Full name is required" }).optional(),
   phone: z.string().optional(),
+  phone_secondary: z.string().optional(),  // Added - WhatsApp number
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
   cnic: z.string().optional().or(z.literal("")),  // Added
   residential_address: z.string().optional().or(z.literal("")),  // Updated from "address"
@@ -66,6 +67,7 @@ const EditPatient = ({ patient, onSuccess }: EditPatientProps) => {
     defaultValues: {
       full_name: patient.full_name,
       phone: patient.phone ?? undefined,
+      phone_secondary: patient.phone_secondary ?? undefined,
       email: patient.email ?? undefined,
       cnic: patient.cnic ?? undefined,
       residential_address: patient.residential_address ?? undefined,
@@ -97,6 +99,7 @@ const EditPatient = ({ patient, onSuccess }: EditPatientProps) => {
     const patientData: PatientUpdate = {
       full_name: data.full_name,
       phone: data.phone || undefined,
+      phone_secondary: data.phone_secondary || undefined,
       email: data.email || undefined,
       cnic: data.cnic || undefined,
       residential_address: data.residential_address || undefined,
@@ -167,14 +170,14 @@ const EditPatient = ({ patient, onSuccess }: EditPatientProps) => {
 
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="phone_secondary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>WhatsApp Number</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Email Address"
-                          type="email"
+                          placeholder="WhatsApp Number"
+                          type="tel"
                           {...field}
                         />
                       </FormControl>
@@ -183,6 +186,24 @@ const EditPatient = ({ patient, onSuccess }: EditPatientProps) => {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="referred_by"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Referred By</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Name or contact of referrer"
+                        type="text"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -338,14 +359,14 @@ const EditPatient = ({ patient, onSuccess }: EditPatientProps) => {
 
               <FormField
                 control={form.control}
-                name="referred_by"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Referred By</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Name or contact of referrer"
-                        type="text"
+                        placeholder="Email Address"
+                        type="email"
                         {...field}
                       />
                     </FormControl>

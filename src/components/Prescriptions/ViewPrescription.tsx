@@ -15,13 +15,12 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
 const typeColors: Record<string, string> = {
-  acute: "bg-blue-500/10 text-blue-500",
-  chronic: "bg-green-500/10 text-green-500",
-  constitutional: "bg-purple-500/10 text-purple-500",
-  intercurrent: "bg-yellow-500/10 text-yellow-500",
-  nosode: "bg-orange-500/10 text-orange-500",
-  sarcode: "bg-pink-500/10 text-pink-500",
-  tautode: "bg-cyan-500/10 text-cyan-500",
+  Constitutional: "bg-purple-500/10 text-purple-500",
+  Classical: "bg-blue-500/10 text-blue-500",
+  "Inter Current": "bg-green-500/10 text-green-500",
+  "Pure Bio Chemic": "bg-yellow-500/10 text-yellow-500",
+  "Mother Tincture": "bg-orange-500/10 text-orange-500",
+  Patent: "bg-pink-500/10 text-pink-500",
 }
 
 interface ViewPrescriptionProps {
@@ -71,12 +70,18 @@ const ViewPrescription = ({ prescription }: ViewPrescriptionProps) => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Type</p>
-                <Badge 
-                  variant="outline" 
-                  className={cn("capitalize mt-1", typeColors[prescription.prescription_type] || "bg-gray-500/10 text-gray-500")}
-                >
-                  {prescription.prescription_type}
-                </Badge>
+                {(() => {
+                  const type = prescription.prescription_type ?? "Unknown"
+                  const typeClass = typeColors[type] || "bg-gray-500/10 text-gray-500"
+                  return (
+                    <Badge
+                      variant="outline"
+                      className={cn("capitalize mt-1", typeClass)}
+                    >
+                      {type}
+                    </Badge>
+                  )
+                })()}
               </div>
             </div>
 
@@ -85,11 +90,11 @@ const ViewPrescription = ({ prescription }: ViewPrescriptionProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Dosage</p>
-                <p className="text-base">{prescription.dosage}</p>
+                <p className="text-base">{prescription.dosage || "N/A"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Duration</p>
-                <p className="text-base">{prescription.duration}</p>
+                <p className="text-base">{prescription.prescription_duration || "N/A"}</p>
               </div>
             </div>
 
@@ -97,15 +102,15 @@ const ViewPrescription = ({ prescription }: ViewPrescriptionProps) => {
               <>
                 <Separator />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-3">Remidies</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Medicines</p>
                   <div className="space-y-2">
                     {prescription.medicines.map((medicine, index) => (
                       <div key={index} className="p-3 border rounded-lg">
-                        <p className="font-medium">{medicine.medicine_name || "Unknown Remidies"}</p>
+                        <p className="font-medium">{medicine.medicine_name || "Unknown Medicine"}</p>
                         <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-muted-foreground">
                           <span>Potency: {medicine.potency || "N/A"}</span>
                           <span>Form: {medicine.form || "N/A"}</span>
-                          <span>Quantity: {medicine.quantity_used}</span>
+                          <span>Quantity: {medicine.quantity_prescribed || "N/A"}</span>
                         </div>
                       </div>
                     ))}

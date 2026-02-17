@@ -7,7 +7,7 @@ import { z } from "zod"
 
 import { CasesService } from "@/client"
 import type { PatientCasePublic, CaseUpdate } from "@/client/CasesService"
-import { DoctorPreferencesService } from "@/client/DoctorPreferencesService"
+import { DoctorPreferencesService, type DoctorField } from "@/client/DoctorPreferencesService"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -57,7 +57,7 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
   // Fetch doctor preferences for custom fields
   const { data: preferencesData } = useQuery({
     queryKey: ["doctor-preferences"],
-    queryFn: () => DoctorPreferencesService.getPreferences(),
+    queryFn: () => DoctorPreferencesService.getFields(),
     enabled: isOpen,
     retry: false,
     throwOnError: false,
@@ -268,12 +268,12 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
               />
 
               {/* Dynamic Custom Fields */}
-              {preferencesData?.custom_fields && preferencesData.custom_fields.length > 0 && (
+              {preferencesData && preferencesData.length > 0 && (
                 <>
                   <div className="col-span-full mt-4 border-t pt-4">
                     <h3 className="text-sm font-medium mb-3">Custom Fields</h3>
                   </div>
-                  {preferencesData.custom_fields.map((customField) => (
+                  {preferencesData.map((customField: DoctorField) => (
                     <FormField
                       key={customField.field_name}
                       control={form.control}

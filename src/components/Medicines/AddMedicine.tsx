@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { MedicinesService } from "@/client"
-import type { DoctorMedicineStockCreate } from "@/client/MedicinesService"
+import { MedicinesService, type MedicineCreate } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -39,19 +38,12 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  medicine_id: z.coerce.number().min(1, { message: "Remidies is required" }),
+  name: z.string().min(1, { message: "Medicine name is required" }),
+  description: z.string().optional(),
   potency: z.string().min(1, { message: "Potency is required" }),
   potency_scale: z.enum(["C", "X", "Q"]).default("C"),
-  form: z.enum(["DISKETTE", "SOM", "BLANKETS", "BIO_CHEMIC", "PLACEBO", "GLOBULES", "DROPS"]).default("GLOBULES"),
-  quantity: z.number().min(0, { message: "Quantity must be 0 or greater" }),
-  unit: z.string().default("packet"),
-  batch_number: z.string().optional(),
-  expiry_date: z.string().optional(),
-  manufacturer: z.string().optional(),
-  purchase_date: z.string().optional(),
-  storage_location: z.string().default("Clinic Cabinet A"),
-  is_active: z.boolean().default(true),
-  low_stock_threshold: z.number().min(0).default(5),
+  form: z.enum(["Diskette", "SOM", "Blankets", "Bio Chemic", "Homoeo Tabs", "Globules", "Dilutions"]).default("Globules"),
+  manufacturer: z.enum(["Schwabe", "Reckweg", "Lemasar", "Dolisos", "Kamal", "Masood", "BM", "Kent", "Brooks", "Waris Shah", "Self Packing"]).optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -61,65 +53,45 @@ const AddMedicine = () => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
-  // Fetch medicines master for dropdown
-  const { data: medicinesData } = useQuery({
-    queryKey: ["medicines-master"],
-    queryFn: () => MedicinesService.readMedicinesMaster({ skip: 0, limit: 1000 }),
-    enabled: isOpen,
-  })
-
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      medicine_id: 0,
+      name: "",
+      description: "",
       potency: "",
       potency_scale: "C",
-      form: "GLOBULES",
-      quantity: 0,
-      unit: "packet",
-      batch_number: "",
-      expiry_date: "",
-      manufacturer: "",
-      purchase_date: new Date().toISOString().split("T")[0],
-      storage_location: "Clinic Cabinet A",
-      is_active: true,
-      low_stock_threshold: 5,
+      form: "Globules",
+      manufacturer: undefined,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: DoctorMedicineStockCreate) =>
-      MedicinesService.createStockItem({ requestBody: data }),
+    mutationFn: (data: MedicineCreate) =>
+      MedicinesService.createMedicine({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Remidies added to stock successfully")
+      showSuccessToast("Medicine added to global catalog successfully")
       form.reset()
       setIsOpen(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["medicines-stock"] })
+      queryClient.invalidateQueries({ queryKey: ["medicines-search"] })
+      queryClient.invalidateQueries({ queryKey: ["medicines-all"] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    const stockData: DoctorMedicineStockCreate = {
-      medicine_id: data.medicine_id,
+    const medicineData: MedicineCreate = {
+      name: data.name,
+      description: data.description || undefined,
       potency: data.potency,
       potency_scale: data.potency_scale,
       form: data.form,
-      quantity: data.quantity,
-      unit: data.unit,
-      batch_number: data.batch_number || undefined,
-      expiry_date: data.expiry_date || undefined,
       manufacturer: data.manufacturer || undefined,
-      purchase_date: data.purchase_date || undefined,
-      storage_location: data.storage_location,
-      is_active: data.is_active,
-      low_stock_threshold: data.low_stock_threshold,
     }
-    mutation.mutate(stockData)
+    mutation.mutate(medicineData)
   }
 
   return (
@@ -127,14 +99,14 @@ const AddMedicine = () => {
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />
-          Add Remidies to Stock
+          Add New Medicine
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Remidies to Stock</DialogTitle>
+          <DialogTitle>Add Medicine to Global Catalog</DialogTitle>
           <DialogDescription>
-            Add a new remidies to your inventory.
+            Add a new medicine to the community-driven catalog. Admins will verify your contribution.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -142,29 +114,35 @@ const AddMedicine = () => {
             <div className="grid gap-4 py-4">
               <FormField
                 control={form.control}
-                name="medicine_id"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Remidies <span className="text-destructive">*</span>
+                      Medicine Name <span className="text-destructive">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                      defaultValue={field.value ? String(field.value) : ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a remidies" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {medicinesData?.data.map((medicine) => (
-                          <SelectItem key={medicine.id} value={String(medicine.id)}>
-                            {medicine.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Arnica Montana"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Used for trauma and bruising"
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -195,7 +173,9 @@ const AddMedicine = () => {
                   name="potency_scale"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Scale</FormLabel>
+                      <FormLabel>
+                        Scale <span className="text-destructive">*</span>
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -206,9 +186,9 @@ const AddMedicine = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="C">C</SelectItem>
-                          <SelectItem value="X">X</SelectItem>
-                          <SelectItem value="Q">Q</SelectItem>
+                          <SelectItem value="C">C (Centesimal)</SelectItem>
+                          <SelectItem value="X">X (Decimal)</SelectItem>
+                          <SelectItem value="Q">Q (Quinquagintamillesimal)</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -221,7 +201,9 @@ const AddMedicine = () => {
                   name="form"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Form</FormLabel>
+                      <FormLabel>
+                        Form <span className="text-destructive">*</span>
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -232,13 +214,13 @@ const AddMedicine = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="DISKETTE">Diskette</SelectItem>
-                          <SelectItem value="SOM">Som</SelectItem>
-                          <SelectItem value="BLANKETS">Blankets</SelectItem>
-                          <SelectItem value="BIO_CHEMIC">Bio Chemic</SelectItem>
-                          <SelectItem value="PLACEBO">Placebo</SelectItem>
-                          <SelectItem value="GLOBULES">Globules</SelectItem>
-                          <SelectItem value="DROPS">Drops</SelectItem>
+                          <SelectItem value="Diskette">Diskette</SelectItem>
+                          <SelectItem value="SOM">SOM</SelectItem>
+                          <SelectItem value="Blankets">Blankets</SelectItem>
+                          <SelectItem value="Bio Chemic">Bio Chemic</SelectItem>
+                          <SelectItem value="Homoeo Tabs">Homoeo Tabs</SelectItem>
+                          <SelectItem value="Globules">Globules</SelectItem>
+                          <SelectItem value="Dilutions">Dilutions</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -247,139 +229,39 @@ const AddMedicine = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Quantity <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="batch_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Batch Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expiry_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiry Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="manufacturer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Manufacturer</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="purchase_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Purchase Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
                 control={form.control}
-                name="storage_location"
+                name="manufacturer"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Storage Location</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Manufacturer (Optional)</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select manufacturer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Schwabe">Schwabe</SelectItem>
+                        <SelectItem value="Reckweg">Reckweg</SelectItem>
+                        <SelectItem value="Lemasar">Lemasar</SelectItem>
+                        <SelectItem value="Dolisos">Dolisos</SelectItem>
+                        <SelectItem value="Kamal">Kamal</SelectItem>
+                        <SelectItem value="Masood">Masood</SelectItem>
+                        <SelectItem value="BM">BM</SelectItem>
+                        <SelectItem value="Kent">Kent</SelectItem>
+                        <SelectItem value="Brooks">Brooks</SelectItem>
+                        <SelectItem value="Waris Shah">Waris Shah</SelectItem>
+                        <SelectItem value="Self Packing">Self Packing</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="low_stock_threshold"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Low Stock Threshold</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </div>
 
             <DialogFooter>
@@ -389,7 +271,7 @@ const AddMedicine = () => {
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Add to Catalog
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -400,4 +282,3 @@ const AddMedicine = () => {
 }
 
 export default AddMedicine
-

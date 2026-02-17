@@ -1,324 +1,267 @@
-// Temporary MedicinesService until SDK is regenerated
+// MedicinesService - Global Medicine Catalog API v3.0
 import type { CancelablePromise } from "./core/CancelablePromise";
 import { OpenAPI } from "./core/OpenAPI";
 import { request as __request } from "./core/request";
 
-export type MedicineForm =
-  | "DISKETTE"
-  | "SOM"
-  | "BLANKETS"
-  | "BIO_CHEMIC"
-  | "PLACEBO"
-  | "GLOBULES"
-  | "DROPS";
-export type PotencyScale = "C" | "X" | "Q";
-export type FormEnum =
-  | "DISKETTE"
-  | "SOM"
-  | "BLANKETS"
-  | "BIO_CHEMIC"
-  | "PLACEBO"
-  | "GLOBULES"
-  | "DROPS";
+// ============================================================================
+// ENUMS
+// ============================================================================
+
 export type ScaleEnum = "C" | "X" | "Q";
-export type PackingEnum = "10" | "30" | "100" | "200" | "450" | "500" | "1000";
+export type PotencyScale = "C" | "X" | "Q";
 
-export interface MedicinesReadMasterData {
-  skip?: number;
-  limit?: number;
-  search?: string;
-  kingdom?: string;
-}
+export type FormEnum =
+  | "Diskette"
+  | "SOM"
+  | "Blankets"
+  | "Bio Chemic"
+  | "Homoeo Tabs"
+  | "Globules"
+  | "Dilutions";
 
-export interface MedicinesReadStockData {
-  skip?: number;
-  limit?: number;
-  search?: string;
-}
+export type ManufacturerEnum =
+  | "Schwabe"
+  | "Reckweg"
+  | "Lemasar"
+  | "Dolisos"
+  | "Kamal"
+  | "Masood"
+  | "BM"
+  | "Kent"
+  | "Brooks"
+  | "Waris Shah"
+  | "Self Packing";
 
-export interface MedicineMasterPublic {
+// ============================================================================
+// DATA MODELS - Responses
+// ============================================================================
+
+export interface MedicinePublic {
   id: number;
   name: string;
   description?: string;
-}
-
-export interface DoctorMedicineStockPublic {
-  id: string;
-  medicine_id: number;
-  doctor_id: string;
-  medicine_name: string;
   potency: string;
-  potency_scale: PotencyScale;
-  form: MedicineForm;
-  quantity: number;
-  unit: string;
-  batch_number: string;
-  expiry_date: string;
-  manufacturer: string;
-  purchase_date: string;
-  last_used_date?: string;
-  storage_location: string;
-  is_active: boolean;
-  low_stock_threshold: number;
+  potency_scale: ScaleEnum;
+  form: FormEnum;
+  manufacturer?: ManufacturerEnum;
+  created_by_doctor_id: string;
+  created_at: string;
+  is_verified: boolean;
+  is_favorite: boolean;
 }
 
 export interface MedicinesPublic {
-  data: MedicineMasterPublic[];
+  data: MedicinePublic[];
   count: number;
 }
 
-export interface MedicinesStockPublic {
-  data: DoctorMedicineStockPublic[];
-  count: number;
-}
+// ============================================================================
+// DATA MODELS - Requests
+// ============================================================================
 
-export interface DoctorMedicineStockCreate {
-  medicine_id: number;
+export interface MedicineCreate {
+  name: string;
+  description?: string;
   potency: string;
-  potency_scale: PotencyScale;
-  form: MedicineForm;
-  quantity: number;
-  unit: string;
-  batch_number?: string;
-  expiry_date?: string;
-  manufacturer?: string;
-  purchase_date?: string;
-  last_used_date?: string;
-  storage_location?: string;
-  is_active?: boolean;
-  low_stock_threshold?: number;
+  potency_scale: ScaleEnum;
+  form: FormEnum;
+  manufacturer?: ManufacturerEnum;
 }
 
-export interface DoctorMedicineStockUpdate {
-  quantity?: number;
-  batch_number?: string;
-  expiry_date?: string;
-  manufacturer?: string;
-  storage_location?: string;
-  is_active?: boolean;
-  low_stock_threshold?: number;
+export interface MedicineUpdate {
+  name?: string;
+  description?: string;
+  potency?: string;
+  potency_scale?: ScaleEnum;
+  form?: FormEnum;
+  manufacturer?: ManufacturerEnum;
+  is_verified?: boolean;
 }
 
-export interface BulkStockCreateRequest {
-  items: DoctorMedicineStockCreate[];
+// ============================================================================
+// QUERY PARAMETERS
+// ============================================================================
+
+export interface MedicinesSearchParams {
+  skip?: number;
+  limit?: number;
+  name?: string;
+  description?: string;
+  potency?: string;
+  potency_scale?: ScaleEnum;
+  form?: FormEnum;
+  manufacturer?: ManufacturerEnum;
+  created_by?: string;
+  is_verified?: boolean;
+  is_favorite?: boolean;
+  from_date?: string;
+  to_date?: string;
 }
 
-export interface BulkStockCreateResponse {
-  message: string;
-  created: number;
-  updated: number;
-  total: number;
-}
-
-export interface StockUsageLog {
-  id: string;
-  stock_item_id: string;
-  prescription_id: string;
-  patient_id: string;
-  quantity_used: number;
-  used_date: string;
-}
-
-export interface StockUsageResponse {
-  stock_item: DoctorMedicineStockPublic;
-  usage_logs: StockUsageLog[];
-  total_used: number;
-  remaining: number;
-}
-
-export interface LowStockAlert {
-  count: number;
-  items: DoctorMedicineStockPublic[];
-  timestamp: string;
-}
-
-export interface ExpiringMedicinesAlert {
-  count: number;
-  items: DoctorMedicineStockPublic[];
-  expiry_threshold: string;
-  timestamp: string;
-}
+// ============================================================================
+// SERVICE CLASS
+// ============================================================================
 
 export class MedicinesService {
-  public static readMedicinesMaster(
-    data: MedicinesReadMasterData = {},
-  ): CancelablePromise<MedicinesPublic> {
+  /**
+   * GET /medicines/all
+   * List all medicines from the global catalog (unpaginated)
+   */
+  public static listAllMedicines(): CancelablePromise<MedicinesPublic> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/medicines/master",
-      query: {
-        skip: data.skip,
-        limit: data.limit,
-        search: data.search,
-        kingdom: data.kingdom,
-      },
+      url: "/medicines/all",
       errors: {
-        422: "Validation Error",
-        403: "Forbidden",
-        401: "Unauthorized",
+        401: "Not authenticated",
+        403: "Only doctors can access medicines",
       },
     });
   }
 
-  public static readMedicineMaster(
+  /**
+   * GET /medicines/search
+   * Search medicines with advanced filters (paginated)
+   */
+  public static searchMedicines(
+    params: MedicinesSearchParams = {},
+  ): CancelablePromise<MedicinesPublic> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/medicines/search",
+      query: {
+        skip: params.skip,
+        limit: params.limit,
+        name: params.name,
+        description: params.description,
+        potency: params.potency,
+        potency_scale: params.potency_scale,
+        form: params.form,
+        manufacturer: params.manufacturer,
+        created_by: params.created_by,
+        is_verified: params.is_verified,
+        is_favorite: params.is_favorite,
+        from_date: params.from_date,
+        to_date: params.to_date,
+      },
+      errors: {
+        401: "Not authenticated",
+        403: "Only doctors can access medicines",
+      },
+    });
+  }
+
+  /**
+   * GET /medicines/{medicine_id}
+   * Get a specific medicine by ID
+   */
+  public static getMedicineById(
     medicineId: number,
-  ): CancelablePromise<MedicineMasterPublic> {
+  ): CancelablePromise<MedicinePublic> {
     return __request(OpenAPI, {
       method: "GET",
       url: `/medicines/${medicineId}`,
       errors: {
-        404: "Remidies not found",
-        403: "Forbidden",
-        401: "Unauthorized",
+        401: "Not authenticated",
+        403: "Only doctors can access medicines",
+        404: "Medicine not found",
       },
     });
   }
 
-  public static readMedicineStock(
-    data: MedicinesReadStockData = {},
-  ): CancelablePromise<MedicinesStockPublic> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/medicines/stock",
-      query: {
-        skip: data.skip,
-        limit: data.limit,
-        search: data.search,
-      },
-      errors: {
-        422: "Validation Error",
-        403: "Forbidden",
-        401: "Unauthorized",
-      },
-    });
-  }
-
-  public static readStockItem(
-    stockId: string,
-  ): CancelablePromise<DoctorMedicineStockPublic> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: `/medicines/stock/${stockId}`,
-      errors: {
-        404: "Stock item not found",
-        403: "Forbidden",
-        401: "Unauthorized",
-      },
-    });
-  }
-
-  public static createStockItem(data: {
-    requestBody: DoctorMedicineStockCreate;
-  }): CancelablePromise<DoctorMedicineStockPublic> {
+  /**
+   * POST /medicines/add
+   * Add a single medicine to the global catalog
+   */
+  public static createMedicine(data: {
+    requestBody: MedicineCreate;
+  }): CancelablePromise<MedicinePublic> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/medicines/stock",
+      url: "/medicines/add",
       body: data.requestBody,
       mediaType: "application/json",
       errors: {
-        422: "Validation Error",
-        403: "Forbidden",
-        400: "Bad Request",
-        404: "Not Found",
-        401: "Unauthorized",
+        400: "Duplicate medicine or invalid data",
+        401: "Not authenticated",
+        403: "Only doctors can add medicines",
       },
     });
   }
 
-  public static bulkCreateStockItems(data: {
-    requestBody: DoctorMedicineStockCreate[];
-  }): CancelablePromise<BulkStockCreateResponse> {
+  /**
+   * POST /medicines/bulk
+   * Add multiple medicines at once (max 100)
+   */
+  public static bulkCreateMedicines(data: {
+    requestBody: MedicineCreate[];
+  }): CancelablePromise<MedicinesPublic> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/medicines/stock/bulk",
+      url: "/medicines/bulk",
       body: data.requestBody,
       mediaType: "application/json",
       errors: {
-        422: "Validation Error",
-        403: "Forbidden",
-        400: "Bad Request",
-        404: "Not Found",
-        401: "Unauthorized",
+        400: "Empty payload or too many items (max 100)",
+        401: "Not authenticated",
+        403: "Only doctors can add medicines",
       },
     });
   }
 
-  public static updateStockItem(data: {
-    stockId: string;
-    requestBody: DoctorMedicineStockUpdate;
-  }): CancelablePromise<DoctorMedicineStockPublic> {
+  /**
+   * PUT /medicines/{medicine_id}
+   * Update a medicine
+   */
+  public static updateMedicine(data: {
+    medicineId: number;
+    requestBody: MedicineUpdate;
+  }): CancelablePromise<MedicinePublic> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: `/medicines/stock/${data.stockId}`,
+      url: `/medicines/${data.medicineId}`,
       body: data.requestBody,
       mediaType: "application/json",
       errors: {
-        422: "Validation Error",
-        404: "Stock item not found",
-        403: "Forbidden",
-        401: "Unauthorized",
+        401: "Not authenticated",
+        403: "Only doctors can update medicines / Only creator or admin can update this medicine",
+        404: "Medicine not found",
       },
     });
   }
 
-  public static deleteStockItem(
-    stockId: string,
+  /**
+   * DELETE /medicines/{medicine_id}
+   * Delete a medicine
+   */
+  public static deleteMedicine(
+    medicineId: number,
   ): CancelablePromise<{ message: string }> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: `/medicines/stock/${stockId}`,
+      url: `/medicines/${medicineId}`,
       errors: {
-        404: "Stock item not found",
-        403: "Forbidden",
-        400: "Bad Request",
-        401: "Unauthorized",
+        400: "Cannot delete medicine used in prescriptions",
+        401: "Not authenticated",
+        403: "Only doctors can delete medicines / Only creator or admin can delete this medicine",
+        404: "Medicine not found",
       },
     });
   }
 
-  public static getStockUsageHistory(data: {
-    stockId: string;
-    from_date?: string;
-    to_date?: string;
-  }): CancelablePromise<StockUsageResponse> {
+  /**
+   * POST /medicines/{medicine_id}/favorite
+   * Toggle medicine as favorite for current doctor
+   */
+  public static toggleFavoriteMedicine(
+    medicineId: number,
+  ): CancelablePromise<{ message: string }> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: `/medicines/stock/${data.stockId}/usage`,
-      query: {
-        from_date: data.from_date,
-        to_date: data.to_date,
-      },
+      method: "POST",
+      url: `/medicines/${medicineId}/favorite`,
       errors: {
-        404: "Stock item not found",
-        403: "Forbidden",
-        401: "Unauthorized",
-      },
-    });
-  }
-
-  public static getLowStockAlerts(): CancelablePromise<LowStockAlert> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/medicines/alerts/low-stock",
-      errors: {
-        403: "Forbidden",
-        401: "Unauthorized",
-      },
-    });
-  }
-
-  public static getExpiringMedicines(
-    days: number = 30,
-  ): CancelablePromise<ExpiringMedicinesAlert> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/medicines/alerts/expiring",
-      query: {
-        days,
-      },
-      errors: {
-        403: "Forbidden",
-        401: "Unauthorized",
+        401: "Not authenticated",
+        403: "Only doctors can mark favorites",
+        404: "Medicine not found",
       },
     });
   }

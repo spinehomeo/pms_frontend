@@ -18,6 +18,7 @@ export interface PatientCreate {
   date_of_birth?: string;
   gender: "male" | "female" | "other" | "child";
   phone?: string;
+  phone_secondary?: string; // Added - WhatsApp number
   email?: string;
   cnic?: string; // National ID (Pakistan)
   residential_address?: string; // Updated per backend guide
@@ -33,6 +34,7 @@ export interface PatientCreate {
 export interface PatientUpdate {
   full_name?: string;
   phone?: string;
+  phone_secondary?: string; // Added - WhatsApp number
   email?: string;
   cnic?: string; // National ID (Pakistan)
   residential_address?: string; // Updated per backend guide
@@ -64,6 +66,7 @@ export interface PatientPublic {
   date_of_birth?: string;
   gender: "male" | "female" | "other" | "child";
   phone?: string;
+  phone_secondary?: string; // Added - WhatsApp number
   email?: string;
   cnic?: string; // National ID (Pakistan)
   residential_address?: string; // Updated per backend guide

@@ -12,6 +12,8 @@ export type DayOfWeek =
   | "saturday"
   | "sunday";
 
+export type ExceptionType = "unavailable" | "custom_hours" | "holiday";
+
 // Request/Response Data Interfaces
 export interface DoctorAvailabilityCreateData {
   requestBody: {
@@ -126,6 +128,99 @@ export interface DoctorScheduleWithPatientInfo {
       }
     >
   >;
+}
+
+// Exception Interfaces
+export interface ExceptionCreateData {
+  requestBody: {
+    exception_date: string;
+    exception_type: ExceptionType;
+    start_time?: string;
+    end_time?: string;
+    reason?: string;
+  };
+}
+
+export interface ExceptionUpdateData {
+  exceptionId: string;
+  requestBody: {
+    exception_type?: ExceptionType;
+    start_time?: string;
+    end_time?: string;
+    reason?: string;
+    is_active?: boolean;
+  };
+}
+
+export interface ExceptionDeleteData {
+  exceptionId: string;
+}
+
+export interface ExceptionListData {
+  start_date?: string;
+  end_date?: string;
+  skip?: number;
+  limit?: number;
+}
+
+export interface DoctorExceptionPublic {
+  id: string;
+  doctor_id: string;
+  exception_date: string;
+  exception_type: ExceptionType;
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DoctorExceptionsPublic {
+  data: DoctorExceptionPublic[];
+  count: number;
+}
+
+// Calendar & Slots Interfaces
+export interface AvailableSlotsCheckData {
+  dayOfWeek: DayOfWeek;
+}
+
+export interface AvailableSlotForDay {
+  slot_id: string;
+  start_time: string;
+  end_time: string;
+  remaining_capacity: number;
+  is_full: boolean;
+}
+
+export interface AvailableSlotsResponse {
+  day_of_week: DayOfWeek;
+  available_slots: AvailableSlotForDay[];
+  total_slots: number;
+  booked_count: number;
+}
+
+export interface CalendarDayInfo {
+  available: boolean;
+  type:
+    | "regular"
+    | "not_scheduled"
+    | "unavailable"
+    | "custom_hours"
+    | "holiday";
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+}
+
+export interface AvailabilityCalendarData {
+  start_date: string;
+  end_date: string;
+}
+
+export interface AvailabilityCalendarResponse {
+  calendar: Record<string, CalendarDayInfo>;
 }
 
 export class DoctorAvailabilityService {
@@ -339,6 +434,153 @@ export class DoctorAvailabilityService {
       },
       errors: {
         400: "Bad Request",
+        404: "Not Found",
+      },
+    });
+  }
+
+  /**
+   * Get available slots for a specific day of week
+   * GET /doctor_availability/slots/{day_of_week}
+   */
+  public static getAvailableSlotsForDay(
+    data: AvailableSlotsCheckData,
+  ): CancelablePromise<AvailableSlotsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: `/doctor_availability/slots/${data.dayOfWeek}`,
+      errors: {
+        400: "Bad Request",
+        404: "Not Found",
+      },
+    });
+  }
+
+  /**
+   * Get availability calendar for a date range
+   * GET /doctor_availability/calendar
+   */
+  public static getAvailabilityCalendar(
+    data: AvailabilityCalendarData,
+  ): CancelablePromise<AvailabilityCalendarResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctor_availability/calendar",
+      query: {
+        start_date: data.start_date,
+        end_date: data.end_date,
+      },
+      errors: {
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+      },
+    });
+  }
+
+  // Exception Management Methods
+
+  /**
+   * Create a date-specific exception
+   * POST /doctor_availability/exceptions
+   */
+  public static createException(
+    data: ExceptionCreateData,
+  ): CancelablePromise<DoctorExceptionPublic> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/doctor_availability/exceptions",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+        409: "Conflict",
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * List all exceptions for doctor
+   * GET /doctor_availability/exceptions
+   */
+  public static listExceptions(
+    data: ExceptionListData = {},
+  ): CancelablePromise<DoctorExceptionsPublic> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctor_availability/exceptions",
+      query: {
+        start_date: data.start_date,
+        end_date: data.end_date,
+        skip: data.skip,
+        limit: data.limit,
+      },
+      errors: {
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Get a single exception
+   * GET /doctor_availability/exceptions/{exception_id}
+   */
+  public static getException(
+    exceptionId: string,
+  ): CancelablePromise<DoctorExceptionPublic> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: `/doctor_availability/exceptions/${exceptionId}`,
+      errors: {
+        401: "Unauthorized",
+        403: "Forbidden",
+        404: "Not Found",
+      },
+    });
+  }
+
+  /**
+   * Update an exception
+   * PUT /doctor_availability/exceptions/{exception_id}
+   */
+  public static updateException(
+    data: ExceptionUpdateData,
+  ): CancelablePromise<DoctorExceptionPublic> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: `/doctor_availability/exceptions/${data.exceptionId}`,
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+        404: "Not Found",
+        409: "Conflict",
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Delete an exception
+   * DELETE /doctor_availability/exceptions/{exception_id}
+   */
+  public static deleteException(
+    data: ExceptionDeleteData,
+  ): CancelablePromise<{ message: string }> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: `/doctor_availability/exceptions/${data.exceptionId}`,
+      errors: {
+        401: "Unauthorized",
+        403: "Forbidden",
         404: "Not Found",
       },
     });

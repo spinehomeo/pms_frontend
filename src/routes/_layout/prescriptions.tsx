@@ -34,7 +34,7 @@ function PrescriptionsTableContent() {
 
   const filteredPrescriptions = useMemo(() => {
     if (!searchQuery.trim()) return prescriptions.data
-    
+
     const query = searchQuery.toLowerCase()
     return prescriptions.data.filter((prescription) => {
       return (
@@ -42,7 +42,7 @@ function PrescriptionsTableContent() {
         prescription.patient_name?.toLowerCase().includes(query) ||
         prescription.prescription_type?.toLowerCase().includes(query) ||
         prescription.dosage?.toLowerCase().includes(query) ||
-        prescription.duration?.toLowerCase().includes(query)
+        prescription.prescription_duration?.toLowerCase().includes(query)
       )
     })
   }, [prescriptions.data, searchQuery])

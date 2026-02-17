@@ -39,7 +39,6 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),

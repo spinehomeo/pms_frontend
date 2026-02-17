@@ -20,35 +20,37 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 interface DeleteMedicineProps {
-  id: string
+  medicineId: number
+  medicineName: string
   onSuccess: () => void
 }
 
-const DeleteMedicine = ({ id, onSuccess }: DeleteMedicineProps) => {
+const DeleteMedicine = ({ medicineId, medicineName, onSuccess }: DeleteMedicineProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { handleSubmit } = useForm()
 
-  const deleteMedicine = async (stockId: string) => {
-    await MedicinesService.deleteStockItem(stockId)
+  const deleteMedicine = async (id: number) => {
+    await MedicinesService.deleteMedicine(id)
   }
 
   const mutation = useMutation({
     mutationFn: deleteMedicine,
     onSuccess: () => {
-      showSuccessToast("The medicine stock item was deleted successfully")
+      showSuccessToast("Medicine deleted successfully")
       setIsOpen(false)
       onSuccess()
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["medicines-stock"] })
+      queryClient.invalidateQueries({ queryKey: ["medicines-search"] })
+      queryClient.invalidateQueries({ queryKey: ["medicines-all"] })
     },
   })
 
   const onSubmit = async () => {
-    mutation.mutate(id)
+    mutation.mutate(medicineId)
   }
 
   return (
@@ -59,14 +61,14 @@ const DeleteMedicine = ({ id, onSuccess }: DeleteMedicineProps) => {
         onClick={() => setIsOpen(true)}
       >
         <Trash2 />
-        Delete Stock Item
+        Delete Medicine
       </DropdownMenuItem>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Delete Remidies Stock Item</DialogTitle>
+            <DialogTitle>Delete {medicineName}</DialogTitle>
             <DialogDescription>
-              This stock item will be permanently deleted. Note: Items used in prescriptions cannot be deleted. Are you sure? You will not
+              This medicine will be permanently deleted. Note: Medicines used in prescriptions cannot be deleted. Are you sure? You will not
               be able to undo this action.
             </DialogDescription>
           </DialogHeader>
@@ -92,4 +94,3 @@ const DeleteMedicine = ({ id, onSuccess }: DeleteMedicineProps) => {
 }
 
 export default DeleteMedicine
-

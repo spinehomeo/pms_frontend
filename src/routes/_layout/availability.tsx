@@ -6,9 +6,11 @@ import { Suspense, useState, useMemo } from "react"
 import { DoctorAvailabilityService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
 import AddAvailabilitySlot from "@/components/DoctorAvailability/AddAvailabilitySlot"
+import ExceptionsListView from "@/components/DoctorAvailability/ExceptionsListView"
 import { columns } from "@/components/DoctorAvailability/columns"
 import PendingAppointments from "@/components/Pending/PendingAppointments"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function getAvailabilitiesQueryOptions() {
     return {
@@ -102,14 +104,28 @@ function AvailabilityTable() {
 function Availability() {
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Doctor Availability</h1>
-                    <p className="text-muted-foreground">Manage your weekly availability schedule</p>
-                </div>
-                <AddAvailabilitySlot />
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight">Doctor Availability</h1>
+                <p className="text-muted-foreground">Manage your weekly schedule and date-specific exceptions</p>
             </div>
-            <AvailabilityTable />
+
+            <Tabs defaultValue="schedule" className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="schedule">Weekly Schedule</TabsTrigger>
+                    <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="schedule" className="space-y-4">
+                    <div className="flex items-center justify-end">
+                        <AddAvailabilitySlot />
+                    </div>
+                    <AvailabilityTable />
+                </TabsContent>
+
+                <TabsContent value="exceptions">
+                    <ExceptionsListView />
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }

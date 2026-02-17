@@ -37,15 +37,18 @@ export {
   type PrescriptionUpdate,
   type PrescriptionType,
   type PrescriptionMedicineCreate,
+  type RepetitionEnum,
 } from "./PrescriptionsService";
 export {
   MedicinesService,
-  type MedicineMasterPublic,
-  type DoctorMedicineStockPublic,
+  type MedicinePublic,
   type MedicinesPublic,
-  type MedicinesStockPublic,
-  type DoctorMedicineStockCreate,
-  type DoctorMedicineStockUpdate,
+  type MedicineCreate,
+  type MedicineUpdate,
+  type FormEnum,
+  type PotencyScale,
+  type ScaleEnum,
+  type ManufacturerEnum,
 } from "./MedicinesService";
 export {
   FollowupsService,
@@ -63,6 +66,12 @@ export {
   type DoctorScheduleWithPatientInfo,
   type AvailableSlotCheck,
   type DayOfWeek,
+  type ExceptionType,
+  type DoctorExceptionPublic,
+  type DoctorExceptionsPublic,
+  type AvailableSlotsResponse,
+  type CalendarDayInfo,
+  type AvailabilityCalendarResponse,
 } from "./DoctorAvailabilityService";
 export {
   DoctorPreferencesService,

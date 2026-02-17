@@ -66,7 +66,7 @@ const DeletePrescription = ({ id, onSuccess }: DeletePrescriptionProps) => {
           <DialogHeader>
             <DialogTitle>Delete Prescription</DialogTitle>
             <DialogDescription>
-              This prescription will be permanently deleted. Stock quantities will be restored. Are you sure? You will not
+              This prescription will be permanently deleted. Are you sure? You will not
               be able to undo this action.
             </DialogDescription>
           </DialogHeader>

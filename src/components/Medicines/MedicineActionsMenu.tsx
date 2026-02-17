@@ -1,7 +1,7 @@
 import { EllipsisVertical } from "lucide-react"
 import { useState } from "react"
 
-import type { DoctorMedicineStockPublic } from "@/client/MedicinesService"
+import type { MedicinePublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,10 +13,10 @@ import EditMedicine from "../Medicines/EditMedicine"
 import ViewMedicine from "../Medicines/ViewMedicine"
 
 interface MedicineActionsMenuProps {
-  stock: DoctorMedicineStockPublic
+  medicine: MedicinePublic
 }
 
-export const MedicineActionsMenu = ({ stock }: MedicineActionsMenuProps) => {
+export const MedicineActionsMenu = ({ medicine }: MedicineActionsMenuProps) => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -27,11 +27,10 @@ export const MedicineActionsMenu = ({ stock }: MedicineActionsMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <ViewMedicine stock={stock} />
-        <EditMedicine stock={stock} onSuccess={() => setOpen(false)} />
-        <DeleteMedicine id={stock.id} onSuccess={() => setOpen(false)} />
+        <ViewMedicine medicine={medicine} />
+        <EditMedicine medicine={medicine} onSuccess={() => setOpen(false)} />
+        <DeleteMedicine medicineId={medicine.id} medicineName={medicine.name} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
-

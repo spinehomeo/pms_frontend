@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, type Resolver } from "react-hook-form"
 import { z } from "zod"
 
 import { UsersService, type UserUpdateMe } from "@/client"
@@ -39,8 +39,8 @@ const UserInformation = () => {
   const [editMode, setEditMode] = useState(false)
   const { user: currentUser } = useAuth()
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormData, unknown, FormData>({
+    resolver: zodResolver(formSchema) as Resolver<FormData>,
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {

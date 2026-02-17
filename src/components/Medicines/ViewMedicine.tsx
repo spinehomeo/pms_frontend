@@ -1,7 +1,8 @@
-import { Eye } from "lucide-react"
+import { Eye, Heart } from "lucide-react"
 import { useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import type { DoctorMedicineStockPublic } from "@/client/MedicinesService"
+import { MedicinesService, type MedicinePublic } from "@/client"
 import {
   Dialog,
   DialogContent,
@@ -12,20 +13,35 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 interface ViewMedicineProps {
-  stock: DoctorMedicineStockPublic
+  medicine: MedicinePublic
 }
 
-const ViewMedicine = ({ stock }: ViewMedicineProps) => {
+const ViewMedicine = ({ medicine }: ViewMedicineProps) => {
   const [isOpen, setIsOpen] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(medicine.is_favorite)
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
 
-  const expiryDate = stock.expiry_date ? new Date(stock.expiry_date) : null
-  const today = new Date()
-  const isExpired = expiryDate ? expiryDate < today : false
-  const daysUntilExpiry = expiryDate ? Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null
-  const isLowStock = stock.quantity <= stock.low_stock_threshold
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: () => MedicinesService.toggleFavoriteMedicine(medicine.id),
+    onSuccess: (data) => {
+      setIsFavorite(!isFavorite)
+      showSuccessToast(data.message)
+    },
+    onError: handleError.bind(showErrorToast),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["medicines-search"] })
+      queryClient.invalidateQueries({ queryKey: ["medicines-all"] })
+    },
+  })
+
+  const createdDate = new Date(medicine.created_at)
 
   return (
     <>
@@ -39,109 +55,98 @@ const ViewMedicine = ({ stock }: ViewMedicineProps) => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Remidies Stock Details</DialogTitle>
+            <DialogTitle>{medicine.name}</DialogTitle>
             <DialogDescription>
-              Complete information about the remidies stock item
+              Complete information about this medicine in the global catalog
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Remidies</p>
-              <p className="text-base font-semibold text-lg">{stock.medicine_name || "Unknown"}</p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Medicine Name</p>
+                <p className="text-base font-semibold">{medicine.name}</p>
+              </div>
+              <div className="flex gap-2">
+                {medicine.is_verified && (
+                  <Badge variant="default" className="bg-green-600">
+                    Verified
+                  </Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleFavoriteMutation.mutate()}
+                  disabled={toggleFavoriteMutation.isPending}
+                >
+                  <Heart
+                    className={cn(
+                      "h-5 w-5",
+                      isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
+                    )}
+                  />
+                </Button>
+              </div>
             </div>
+
+            {medicine.description && (
+              <>
+                <Separator />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Description</p>
+                  <p className="text-base">{medicine.description}</p>
+                </div>
+              </>
+            )}
 
             <Separator />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Potency</p>
-                <p className="text-base font-mono">{stock.potency}</p>
+                <p className="text-base font-mono">{medicine.potency}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Potency Scale</p>
-                <p className="text-base">{stock.potency_scale}</p>
+                <p className="text-base">{medicine.potency_scale}</p>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Form</p>
                 <Badge variant="outline" className="capitalize mt-1">
-                  {stock.form}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Status</p>
-                <Badge variant={stock.is_active ? "default" : "secondary"} className="mt-1">
-                  {stock.is_active ? "Active" : "Inactive"}
+                  {medicine.form}
                 </Badge>
               </div>
             </div>
+
+            {medicine.manufacturer && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Manufacturer</p>
+                <p className="text-base">{medicine.manufacturer}</p>
+              </div>
+            )}
 
             <Separator />
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Quantity</p>
-                <p className={cn(
-                  "text-base font-semibold",
-                  isLowStock && "text-orange-500"
-                )}>
-                  {stock.quantity} {stock.unit}
+                <p className="text-sm font-medium text-muted-foreground">Added On</p>
+                <p className="text-base">{createdDate.toLocaleDateString()}</p>
+                <p className="text-xs text-muted-foreground">
+                  {createdDate.toLocaleTimeString()}
                 </p>
-                {isLowStock && (
-                  <p className="text-xs text-orange-500 mt-1">Low stock warning</p>
-                )}
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Low Stock Threshold</p>
-                <p className="text-base">{stock.low_stock_threshold} {stock.unit}</p>
+                <p className="text-sm font-medium text-muted-foreground">Created By</p>
+                <p className="text-xs font-mono break-all">
+                  {medicine.created_by_doctor_id}
+                </p>
               </div>
             </div>
 
-            {stock.expiry_date && expiryDate && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Expiry Date</p>
-                <p className={cn(
-                  "text-base",
-                  isExpired && "text-red-500 font-medium",
-                  !isExpired && daysUntilExpiry && daysUntilExpiry <= 30 && "text-orange-500"
-                )}>
-                  {expiryDate.toLocaleDateString()}
-                  {isExpired && <span className="ml-2 text-xs">(Expired)</span>}
-                  {!isExpired && daysUntilExpiry && daysUntilExpiry <= 30 && (
-                    <span className="ml-2 text-xs">({daysUntilExpiry} days remaining)</span>
-                  )}
-                </p>
-              </div>
-            )}
-
-            {stock.batch_number && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Batch Number</p>
-                <p className="text-base font-mono">{stock.batch_number}</p>
-              </div>
-            )}
-
-            {stock.manufacturer && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Manufacturer</p>
-                <p className="text-base">{stock.manufacturer}</p>
-              </div>
-            )}
-
-            {stock.purchase_date && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Purchase Date</p>
-                <p className="text-base">
-                  {new Date(stock.purchase_date).toLocaleDateString()}
-                </p>
-              </div>
-            )}
-
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Storage Location</p>
-              <p className="text-base">{stock.storage_location}</p>
+              <p className="text-sm font-medium text-muted-foreground">Verification Status</p>
+              <Badge variant={medicine.is_verified ? "default" : "secondary"} className="mt-1">
+                {medicine.is_verified ? "Verified ✓" : "Pending Review"}
+              </Badge>
             </div>
           </div>
         </DialogContent>
@@ -151,4 +156,3 @@ const ViewMedicine = ({ stock }: ViewMedicineProps) => {
 }
 
 export default ViewMedicine
-

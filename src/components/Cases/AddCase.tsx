@@ -8,7 +8,7 @@ import { z } from "zod"
 import { AppointmentsService, CasesService, PatientsService } from "@/client"
 import type { CaseCreate } from "@/client/CasesService"
 import type { PatientPublic } from "@/client/PatientsService"
-import { DoctorPreferencesService } from "@/client/DoctorPreferencesService"
+import { DoctorPreferencesService, type DoctorField } from "@/client/DoctorPreferencesService"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -40,8 +40,6 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-import { cn } from "@/lib/utils"
-
 const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),
   appointment_id: z.string().optional(),
@@ -85,7 +83,7 @@ const AddCase = () => {
   // Fetch doctor preferences for custom fields
   const { data: preferencesData } = useQuery({
     queryKey: ["doctor-preferences"],
-    queryFn: () => DoctorPreferencesService.getPreferences(),
+    queryFn: () => DoctorPreferencesService.getFields(),
     enabled: isOpen,
     retry: false,
     throwOnError: false,
@@ -440,12 +438,12 @@ const AddCase = () => {
               />
 
               {/* Dynamic Custom Fields */}
-              {preferencesData?.custom_fields && preferencesData.custom_fields.length > 0 && (
+              {preferencesData && preferencesData.length > 0 && (
                 <>
                   <div className="col-span-full mt-4 border-t pt-4">
                     <h3 className="text-sm font-medium mb-3">Custom Fields</h3>
                   </div>
-                  {preferencesData.custom_fields.map((customField) => (
+                  {preferencesData.map((customField: DoctorField) => (
                     <FormField
                       key={customField.field_name}
                       control={form.control}

@@ -4,13 +4,36 @@ import { OpenAPI } from "./core/OpenAPI";
 import { request as __request } from "./core/request";
 
 export type PrescriptionType =
-  | "acute"
-  | "chronic"
-  | "constitutional"
-  | "intercurrent"
-  | "nosode"
-  | "sarcode"
-  | "tautode";
+  | "Constitutional"
+  | "Classical"
+  | "Inter Current"
+  | "Pure Bio Chemic"
+  | "Mother Tincture"
+  | "Patent";
+
+export type RepetitionEnum =
+  | "OD"
+  | "BD"
+  | "TDS"
+  | "Once Weekly"
+  | "Once in 10 Days"
+  | "Fortnightly"
+  | "Monthly";
+
+export interface QuickAddMedicineData {
+  name: string;
+  potency: string;
+  potency_scale?: "C" | "X" | "Q";
+  form?: string;
+  manufacturer?: string;
+  description?: string;
+}
+
+export interface PrescriptionMedicineCreate {
+  medicine_id?: number;
+  new_medicine?: QuickAddMedicineData;
+  quantity_prescribed?: string;
+}
 
 export interface PrescriptionsReadPrescriptionsData {
   skip?: number;
@@ -24,17 +47,11 @@ export interface PrescriptionsReadPrescriptionData {
   prescriptionId: string;
 }
 
-export interface PrescriptionMedicineCreate {
-  medicine_id: string;
-  stock_id: string;
-  quantity: number;
-}
-
 export interface PrescriptionCreate {
   case_id: string;
   prescription_type?: PrescriptionType;
-  dosage: string;
-  duration: string;
+  dosage?: string;
+  prescription_duration?: string;
   instructions?: string;
   follow_up_advice?: string;
   dietary_restrictions?: string;
@@ -45,12 +62,13 @@ export interface PrescriptionCreate {
 
 export interface PrescriptionUpdate {
   dosage?: string;
-  duration?: string;
+  prescription_duration?: string;
   instructions?: string;
   follow_up_advice?: string;
   dietary_restrictions?: string;
   avoidance?: string;
   notes?: string;
+  medicines?: PrescriptionMedicineCreate[];
 }
 
 export interface PrescriptionsCreatePrescriptionData {
@@ -59,7 +77,7 @@ export interface PrescriptionsCreatePrescriptionData {
 
 export interface PrescriptionsUpdatePrescriptionData {
   prescriptionId: string;
-  requestBody: PrescriptionCreate;
+  requestBody: PrescriptionUpdate;
 }
 
 export interface PrescriptionsDeletePrescriptionData {
@@ -68,9 +86,8 @@ export interface PrescriptionsDeletePrescriptionData {
 
 export interface PrescriptionMedicinePublic {
   id: string;
-  medicine_id: string;
-  stock_used_id: string;
-  quantity_used: number;
+  medicine_id: number;
+  quantity_prescribed: string;
   medicine_name?: string;
   potency?: string;
   form?: string;
@@ -82,9 +99,9 @@ export interface PrescriptionPublic {
   doctor_id: string;
   prescription_date: string;
   prescription_number: string;
-  prescription_type: PrescriptionType;
-  dosage: string;
-  duration: string;
+  prescription_type?: PrescriptionType;
+  dosage?: string;
+  prescription_duration?: string;
   instructions?: string;
   follow_up_advice?: string;
   dietary_restrictions?: string;
@@ -104,9 +121,10 @@ export interface PrintPrescriptionMedicine {
   name: string;
   potency: string;
   form: string;
-  dosage: string;
-  duration: string;
-  instructions: string;
+  quantity_prescribed: string;
+  dosage?: string;
+  prescription_duration?: string;
+  instructions?: string;
 }
 
 export interface PrintPrescriptionResponse {
@@ -114,11 +132,15 @@ export interface PrintPrescriptionResponse {
   patient: {
     id: string;
     full_name: string;
+    age?: number;
+    gender?: string;
+    phone?: string;
   };
   medicines: PrintPrescriptionMedicine[];
   doctor: {
     id: string;
     full_name: string;
+    qualifications?: string;
   };
   print_date: string;
 }
@@ -140,6 +162,7 @@ export class PrescriptionsService {
       errors: {
         422: "Validation Error",
         403: "Forbidden",
+        401: "Not authenticated",
       },
     });
   }
@@ -153,6 +176,7 @@ export class PrescriptionsService {
       errors: {
         404: "Prescription not found",
         403: "Forbidden",
+        401: "Not authenticated",
       },
     });
   }
@@ -170,6 +194,7 @@ export class PrescriptionsService {
         403: "Forbidden",
         400: "Bad Request",
         404: "Not Found",
+        401: "Not authenticated",
       },
     });
   }
@@ -187,6 +212,7 @@ export class PrescriptionsService {
         404: "Prescription not found",
         403: "Forbidden",
         400: "Bad Request",
+        401: "Not authenticated",
       },
     });
   }
@@ -200,6 +226,7 @@ export class PrescriptionsService {
       errors: {
         404: "Prescription not found",
         403: "Forbidden",
+        401: "Not authenticated",
       },
     });
   }
@@ -213,6 +240,7 @@ export class PrescriptionsService {
       errors: {
         404: "Prescription not found",
         403: "Forbidden",
+        401: "Not authenticated",
       },
     });
   }

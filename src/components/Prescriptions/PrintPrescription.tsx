@@ -92,9 +92,9 @@ const PrintPrescription = ({ prescription }: PrintPrescriptionProps) => {
 
                             <Separator className="print:border-t" />
 
-                            {/* Remidies */}
+                            {/* Medicines */}
                             <div>
-                                <p className="text-sm font-semibold mb-3 print:text-base">Remidies Prescribed:</p>
+                                <p className="text-sm font-semibold mb-3 print:text-base">Medicines Prescribed:</p>
                                 <div className="space-y-3">
                                     {printData.medicines.map((medicine, index) => (
                                         <div key={index} className="pl-4 border-l-2 border-primary/20 print:border-black">
@@ -102,8 +102,13 @@ const PrintPrescription = ({ prescription }: PrintPrescriptionProps) => {
                                                 {index + 1}. {medicine.name} - {medicine.potency} ({medicine.form})
                                             </p>
                                             <div className="mt-1 space-y-1 text-sm text-muted-foreground print:text-black">
-                                                <p><span className="font-medium">Dosage:</span> {medicine.dosage}</p>
-                                                <p><span className="font-medium">Duration:</span> {medicine.duration}</p>
+                                                <p><span className="font-medium">Quantity:</span> {medicine.quantity_prescribed}</p>
+                                                {medicine.dosage && (
+                                                    <p><span className="font-medium">Dosage:</span> {medicine.dosage}</p>
+                                                )}
+                                                {medicine.prescription_duration && (
+                                                    <p><span className="font-medium">Duration:</span> {medicine.prescription_duration}</p>
+                                                )}
                                                 {medicine.instructions && (
                                                     <p><span className="font-medium">Instructions:</span> {medicine.instructions}</p>
                                                 )}

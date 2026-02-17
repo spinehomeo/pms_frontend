@@ -44,6 +44,7 @@ const formSchema = z.object({
   date_of_birth: z.string().optional(),
   gender: z.enum(["male", "female", "other", "child"]),
   phone: z.string().optional(),
+  phone_secondary: z.string().optional(),  // Added - WhatsApp number
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
   cnic: z.string().optional().or(z.literal("")),  // Added - National ID
   residential_address: z.string().optional().or(z.literal("")),  // Updated from "address"
@@ -72,6 +73,7 @@ const AddPatient = () => {
       date_of_birth: "",
       gender: "male",
       phone: "",
+      phone_secondary: "",
       email: "",
       cnic: "",
       residential_address: "",
@@ -105,6 +107,7 @@ const AddPatient = () => {
       gender: data.gender,
       date_of_birth: data.date_of_birth || undefined,
       phone: data.phone || undefined,
+      phone_secondary: data.phone_secondary || undefined,
       email: data.email || undefined,
       cnic: data.cnic || undefined,
       residential_address: data.residential_address || undefined,
@@ -227,23 +230,43 @@ const AddPatient = () => {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Email Address"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone_secondary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>WhatsApp Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="WhatsApp Number"
+                          type="tel"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="referred_by"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Referred By</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Name or contact of referrer"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -402,14 +425,14 @@ const AddPatient = () => {
 
               <FormField
                 control={form.control}
-                name="referred_by"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Referred By</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Name or contact of referrer"
-                        type="text"
+                        placeholder="Email Address"
+                        type="email"
                         {...field}
                       />
                     </FormControl>

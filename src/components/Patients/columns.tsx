@@ -54,6 +54,18 @@ export const columns: ColumnDef<PatientPublic>[] = [
     },
   },
   {
+    accessorKey: "phone_secondary",
+    header: "WhatsApp",
+    cell: ({ row }) => {
+      const whatsapp = row.original.phone_secondary
+      return (
+        <span className={cn("text-muted-foreground", !whatsapp && "italic")}>
+          {whatsapp || "-"}
+        </span>
+      )
+    },
+  },
+  {
     accessorKey: "cnic",
     header: "CNIC",
     cell: ({ row }) => {

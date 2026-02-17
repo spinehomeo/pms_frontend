@@ -76,15 +76,23 @@ const ViewPatient = ({ patient }: ViewPatientProps) => {
                 <p className="text-base">{patient.phone || <span className="text-muted-foreground italic">Not provided</span>}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <p className="text-base">{patient.email || <span className="text-muted-foreground italic">Not provided</span>}</p>
+                <p className="text-sm font-medium text-muted-foreground">WhatsApp Number</p>
+                <p className="text-base">{patient.phone_secondary || <span className="text-muted-foreground italic">Not provided</span>}</p>
               </div>
             </div>
 
-            {patient.address && (
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Email</p>
+              <p className="text-base">{patient.email || <span className="text-muted-foreground italic">Not provided</span>}</p>
+            </div>
+
+            {(patient.residential_address || patient.city) && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Address</p>
-                <p className="text-base">{patient.address}</p>
+                <p className="text-base">{patient.residential_address || "N/A"}</p>
+                {patient.city && (
+                  <p className="text-sm text-muted-foreground">{patient.city}</p>
+                )}
               </div>
             )}
 
@@ -125,15 +133,6 @@ const ViewPatient = ({ patient }: ViewPatientProps) => {
               </div>
             )}
 
-            {patient.notes && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Notes</p>
-                <p className="text-base whitespace-pre-wrap">{patient.notes}</p>
-              </div>
-            )}
-
-            <Separator />
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Created Date</p>
@@ -141,14 +140,6 @@ const ViewPatient = ({ patient }: ViewPatientProps) => {
                   {new Date(patient.created_date).toLocaleDateString()}
                 </p>
               </div>
-              {patient.last_visit_date && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Last Visit</p>
-                  <p className="text-base">
-                    {new Date(patient.last_visit_date).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </DialogContent>
