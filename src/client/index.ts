@@ -36,6 +36,7 @@ export {
   type PrescriptionCreate,
   type PrescriptionUpdate,
   type PrescriptionType,
+  type PrescriptionStatus,
   type PrescriptionMedicineCreate,
   type RepetitionEnum,
 } from "./PrescriptionsService";
@@ -109,3 +110,4 @@ export {
   type Service,
   type Testimonial,
 } from "./WebContentService";
+export { EnumsService, type DoctorEnumName } from "./EnumsService";

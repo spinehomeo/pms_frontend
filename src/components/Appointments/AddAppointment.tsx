@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { Plus, CheckCircle2, XCircle, Search } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
@@ -55,6 +56,10 @@ type FormData = z.infer<typeof formSchema>
 
 const AddAppointment = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [isFlowModalOpen, setIsFlowModalOpen] = useState(false)
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null)
+  const [createdPatientId, setCreatedPatientId] = useState<string | null>(null)
+  const [prefillPatientId, setPrefillPatientId] = useState<string | null>(null)
   const [patientSearchInput, setPatientSearchInput] = useState("")
   const [showPatientSuggestions, setShowPatientSuggestions] = useState(false)
   const [selectedPatientInfo, setSelectedPatientInfo] = useState<PatientPublic | null>(null)
@@ -64,7 +69,21 @@ const AddAppointment = () => {
     message?: string
   }>({ checked: false })
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const shouldOpen = searchParams.get("openAdd") === "true"
+    const flow = searchParams.get("flow")
+    const patientId = searchParams.get("patientId")
+
+    if (shouldOpen && flow === "patient-to-appointment" && patientId) {
+      setPrefillPatientId(patientId)
+      setIsOpen(true)
+      window.history.replaceState({}, "", window.location.pathname)
+    }
+  }, [])
 
   // Fetch patients for dropdown
   const { data: patientsData } = useQuery({
@@ -87,6 +106,18 @@ const AddAppointment = () => {
       )
     })
   }, [patientsData?.data, patientSearchInput])
+
+  useEffect(() => {
+    if (!prefillPatientId || !patientsData?.data) return
+
+    const patient = patientsData.data.find((item) => item.id === prefillPatientId)
+    if (!patient) return
+
+    form.setValue("patient_id", patient.id)
+    setSelectedPatientInfo(patient)
+    setPatientSearchInput(patient.full_name)
+    setShowPatientSuggestions(false)
+  }, [prefillPatientId, patientsData?.data])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -162,10 +193,13 @@ const AddAppointment = () => {
   const mutation = useMutation({
     mutationFn: (data: AppointmentCreate) =>
       AppointmentsService.createAppointment({ requestBody: data }),
-    onSuccess: () => {
+    onSuccess: (appointment) => {
       showSuccessToast("Appointment created successfully")
       form.reset()
       setIsOpen(false)
+      setCreatedAppointmentId(appointment.id)
+      setCreatedPatientId(appointment.patient_id)
+      setIsFlowModalOpen(true)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
@@ -187,114 +221,243 @@ const AddAppointment = () => {
     mutation.mutate(appointmentData)
   }
 
+  const handleAddCase = () => {
+    if (!createdAppointmentId || !createdPatientId) return
+    setIsFlowModalOpen(false)
+    navigate({
+      to: `/cases?openAdd=true&flow=appointment-to-case&patientId=${createdPatientId}&appointmentId=${createdAppointmentId}`,
+    })
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="my-4">
-          <Plus className="mr-2" />
-          Add Appointment
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add Appointment</DialogTitle>
-          <DialogDescription>
-            Schedule a new appointment for a patient.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid gap-4 py-4">
-              <FormField
-                control={form.control}
-                name="patient_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Patient <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <div className="space-y-2 relative">
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search by patient name, city..."
-                          value={patientSearchInput}
-                          onChange={(e) => {
-                            setPatientSearchInput(e.target.value)
-                            setShowPatientSuggestions(true)
-                          }}
-                          onFocus={() => setShowPatientSuggestions(true)}
-                          className="pl-8"
-                        />
-                      </div>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button className="my-4">
+            <Plus className="mr-2" />
+            Add Appointment
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Appointment</DialogTitle>
+            <DialogDescription>
+              Schedule a new appointment for a patient.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="grid gap-4 py-4">
+                <FormField
+                  control={form.control}
+                  name="patient_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Patient <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <div className="space-y-2 relative">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search by patient name, city..."
+                            value={patientSearchInput}
+                            onChange={(e) => {
+                              setPatientSearchInput(e.target.value)
+                              setShowPatientSuggestions(true)
+                            }}
+                            onFocus={() => setShowPatientSuggestions(true)}
+                            className="pl-8"
+                          />
+                        </div>
 
-                      {showPatientSuggestions && patientSearchInput && (
-                        <div className="w-full bg-background border border-input rounded-md shadow-md max-h-64 overflow-y-auto">
-                          {filteredPatients.length > 0 ? (
-                            <div>
-                              {filteredPatients.map((patient) => (
-                                <div
-                                  key={patient.id}
-                                  onClick={() => {
-                                    field.onChange(patient.id)
-                                    setSelectedPatientInfo(patient)
-                                    setPatientSearchInput(patient.full_name)
-                                    setShowPatientSuggestions(false)
-                                  }}
-                                  className="px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
-                                >
-                                  <div className="font-medium">{patient.full_name}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {patient.city ? `${patient.city}` : "No city"}
-                                    {patient.phone && ` • ${patient.phone}`}
+                        {showPatientSuggestions && patientSearchInput && (
+                          <div className="w-full bg-background border border-input rounded-md shadow-md max-h-64 overflow-y-auto">
+                            {filteredPatients.length > 0 ? (
+                              <div>
+                                {filteredPatients.map((patient) => (
+                                  <div
+                                    key={patient.id}
+                                    onClick={() => {
+                                      field.onChange(patient.id)
+                                      setSelectedPatientInfo(patient)
+                                      setPatientSearchInput(patient.full_name)
+                                      setShowPatientSuggestions(false)
+                                    }}
+                                    className="px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                                  >
+                                    <div className="font-medium">{patient.full_name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {patient.city ? `${patient.city}` : "No city"}
+                                      {patient.phone && ` • ${patient.phone}`}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="px-3 py-2 text-sm text-muted-foreground">
-                              No patients found
-                            </div>
-                          )}
-                        </div>
-                      )}
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="px-3 py-2 text-sm text-muted-foreground">
+                                No patients found
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                      {field.value && selectedPatientInfo && (
-                        <div className="bg-muted p-3 rounded-md space-y-1">
-                          <div className="text-sm font-medium">Selected Patient</div>
-                          <div className="text-sm">{selectedPatientInfo.full_name}</div>
-                          {selectedPatientInfo.phone && (
-                            <div className="text-sm text-muted-foreground">
-                              📱 {selectedPatientInfo.phone}
-                            </div>
-                          )}
-                          {selectedPatientInfo.city && (
-                            <div className="text-sm text-muted-foreground">
-                              📍 {selectedPatientInfo.city}
-                            </div>
-                          )}
-                        </div>
+                        {field.value && selectedPatientInfo && (
+                          <div className="bg-muted p-3 rounded-md space-y-1">
+                            <div className="text-sm font-medium">Selected Patient</div>
+                            <div className="text-sm">{selectedPatientInfo.full_name}</div>
+                            {selectedPatientInfo.phone && (
+                              <div className="text-sm text-muted-foreground">
+                                📱 {selectedPatientInfo.phone}
+                              </div>
+                            )}
+                            {selectedPatientInfo.city && (
+                              <div className="text-sm text-muted-foreground">
+                                📍 {selectedPatientInfo.city}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="appointment_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Date <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="appointment_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Time <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="time"
+                            {...field}
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="duration_minutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration (minutes)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={15}
+                            max={480}
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="scheduled">Scheduled</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="no_show">No Show</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Availability Check */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCheckAvailability}
+                    disabled={checkAvailabilityMutation.isPending}
+                  >
+                    Check Availability
+                  </Button>
+                  {availabilityStatus.checked && (
+                    <div className="flex items-center gap-2">
+                      {availabilityStatus.available ? (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          <span className="text-sm text-green-600">
+                            {availabilityStatus.message}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-5 w-5 text-red-500" />
+                          <span className="text-sm text-red-600">
+                            {availabilityStatus.message}
+                          </span>
+                        </>
                       )}
                     </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  )}
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="appointment_date"
+                  name="consultation_type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        Date <span className="text-destructive">*</span>
-                      </FormLabel>
+                      <FormLabel>Consultation Type</FormLabel>
                       <FormControl>
                         <Input
-                          type="date"
+                          placeholder="e.g., first, follow-up, emergency"
                           {...field}
-                          required
                         />
                       </FormControl>
                       <FormMessage />
@@ -304,39 +467,15 @@ const AddAppointment = () => {
 
                 <FormField
                   control={form.control}
-                  name="appointment_time"
+                  name="reason"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        Time <span className="text-destructive">*</span>
-                      </FormLabel>
+                      <FormLabel>Reason</FormLabel>
                       <FormControl>
-                        <Input
-                          type="time"
+                        <Textarea
+                          placeholder="Reason for appointment"
                           {...field}
-                          required
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="duration_minutes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration (minutes)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={15}
-                          max={480}
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                          rows={2}
                         />
                       </FormControl>
                       <FormMessage />
@@ -346,133 +485,57 @@ const AddAppointment = () => {
 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="no_show">No Show</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Additional notes"
+                          {...field}
+                          rows={2}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* Availability Check */}
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCheckAvailability}
-                  disabled={checkAvailabilityMutation.isPending}
-                >
-                  Check Availability
-                </Button>
-                {availabilityStatus.checked && (
-                  <div className="flex items-center gap-2">
-                    {availabilityStatus.available ? (
-                      <>
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <span className="text-sm text-green-600">
-                          {availabilityStatus.message}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-5 w-5 text-red-500" />
-                        <span className="text-sm text-red-600">
-                          {availabilityStatus.message}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={mutation.isPending}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <LoadingButton type="submit" loading={mutation.isPending}>
+                  Save
+                </LoadingButton>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-              <FormField
-                control={form.control}
-                name="consultation_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Consultation Type</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., first, follow-up, emergency"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reason</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Reason for appointment"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Additional notes"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
-                </Button>
-              </DialogClose>
-              <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
-              </LoadingButton>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+      <Dialog open={isFlowModalOpen} onOpenChange={setIsFlowModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Appointment Created Successfully</DialogTitle>
+            <DialogDescription>
+              Continue the guided flow by creating a case for this patient.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+            <Button onClick={handleAddCase} disabled={!createdAppointmentId || !createdPatientId}>
+              Add Case
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

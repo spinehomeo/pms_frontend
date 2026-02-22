@@ -19,7 +19,7 @@ export interface CaseCreate {
   patient_id: string;
   appointment_id?: string;
   chief_complaint_patient: string;
-  duration: string;
+  chief_complaint_duration: string;
   physicals?: string;
   noted_complaint_doctor?: string;
   peculiar_symptoms?: string;

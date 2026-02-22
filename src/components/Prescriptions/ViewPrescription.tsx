@@ -23,6 +23,12 @@ const typeColors: Record<string, string> = {
   Patent: "bg-pink-500/10 text-pink-500",
 }
 
+const statusColors: Record<string, string> = {
+  open: "bg-emerald-500/10 text-emerald-500",
+  completed: "bg-blue-500/10 text-blue-500",
+  cancelled: "bg-red-500/10 text-red-500",
+}
+
 interface ViewPrescriptionProps {
   prescription: PrescriptionPublic
 }
@@ -85,6 +91,22 @@ const ViewPrescription = ({ prescription }: ViewPrescriptionProps) => {
               </div>
             </div>
 
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Status</p>
+              {(() => {
+                const status = prescription.status ?? "open"
+                const statusClass = statusColors[status] || "bg-gray-500/10 text-gray-500"
+                return (
+                  <Badge
+                    variant="outline"
+                    className={cn("capitalize mt-1", statusClass)}
+                  >
+                    {status}
+                  </Badge>
+                )
+              })()}
+            </div>
+
             <Separator />
 
             <div className="grid grid-cols-2 gap-4">
@@ -106,11 +128,12 @@ const ViewPrescription = ({ prescription }: ViewPrescriptionProps) => {
                   <div className="space-y-2">
                     {prescription.medicines.map((medicine, index) => (
                       <div key={index} className="p-3 border rounded-lg">
-                        <p className="font-medium">{medicine.medicine_name || "Unknown Medicine"}</p>
+                        <p className="font-medium">{medicine.medicine?.name || medicine.medicine_name || "Unknown Medicine"}</p>
                         <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-muted-foreground">
-                          <span>Potency: {medicine.potency || "N/A"}</span>
-                          <span>Form: {medicine.form || "N/A"}</span>
+                          <span>Potency: {medicine.medicine?.potency || medicine.potency || "N/A"}</span>
+                          <span>Form: {medicine.medicine?.form || medicine.form || "N/A"}</span>
                           <span>Quantity: {medicine.quantity_prescribed || "N/A"}</span>
+                          <span>Frequency: {medicine.frequency || "N/A"}</span>
                         </div>
                       </div>
                     ))}

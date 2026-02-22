@@ -20,6 +20,8 @@ export type RepetitionEnum =
   | "Fortnightly"
   | "Monthly";
 
+export type PrescriptionStatus = "open" | "completed" | "cancelled";
+
 export interface QuickAddMedicineData {
   name: string;
   potency: string;
@@ -30,9 +32,10 @@ export interface QuickAddMedicineData {
 }
 
 export interface PrescriptionMedicineCreate {
-  medicine_id?: number;
+  medicine_id?: string;
   new_medicine?: QuickAddMedicineData;
   quantity_prescribed?: string;
+  frequency?: RepetitionEnum;
 }
 
 export interface PrescriptionsReadPrescriptionsData {
@@ -57,6 +60,7 @@ export interface PrescriptionCreate {
   dietary_restrictions?: string;
   avoidance?: string;
   notes?: string;
+  status?: PrescriptionStatus;
   medicines: PrescriptionMedicineCreate[];
 }
 
@@ -68,6 +72,7 @@ export interface PrescriptionUpdate {
   dietary_restrictions?: string;
   avoidance?: string;
   notes?: string;
+  status?: PrescriptionStatus;
   medicines?: PrescriptionMedicineCreate[];
 }
 
@@ -86,11 +91,18 @@ export interface PrescriptionsDeletePrescriptionData {
 
 export interface PrescriptionMedicinePublic {
   id: string;
-  medicine_id: number;
+  medicine_id: string;
   quantity_prescribed: string;
+  frequency?: RepetitionEnum;
   medicine_name?: string;
   potency?: string;
   form?: string;
+  medicine?: {
+    id: string;
+    name: string;
+    potency?: string;
+    form?: string;
+  };
 }
 
 export interface PrescriptionPublic {
@@ -107,6 +119,7 @@ export interface PrescriptionPublic {
   dietary_restrictions?: string;
   avoidance?: string;
   notes?: string;
+  status?: PrescriptionStatus;
   medicines: PrescriptionMedicinePublic[];
   patient_name?: string;
   case_number?: string;

@@ -14,6 +14,12 @@ const typeColors: Record<string, string> = {
   Patent: "bg-pink-500/10 text-pink-500",
 }
 
+const statusColors: Record<string, string> = {
+  open: "bg-emerald-500/10 text-emerald-500",
+  completed: "bg-blue-500/10 text-blue-500",
+  cancelled: "bg-red-500/10 text-red-500",
+}
+
 export const columns: ColumnDef<PrescriptionPublic>[] = [
   {
     id: "index",
@@ -65,6 +71,19 @@ export const columns: ColumnDef<PrescriptionPublic>[] = [
           className={cn("capitalize", typeClass)}
         >
           {type}
+        </Badge>
+      )
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status ?? "open"
+      const statusClass = statusColors[status] || "bg-gray-500/10 text-gray-500"
+      return (
+        <Badge variant="outline" className={cn("capitalize", statusClass)}>
+          {status}
         </Badge>
       )
     },

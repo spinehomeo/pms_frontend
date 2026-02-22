@@ -5,8 +5,14 @@ import { useState } from "react"
 import { useForm, useFieldArray, type Resolver } from "react-hook-form"
 import { z } from "zod"
 
-import { PrescriptionsService, MedicinesService } from "@/client"
-import type { PrescriptionPublic, PrescriptionUpdate, PrescriptionMedicineCreate } from "@/client/PrescriptionsService"
+import { PrescriptionsService, MedicinesService, EnumsService } from "@/client"
+import type {
+  PrescriptionPublic,
+  PrescriptionUpdate,
+  PrescriptionMedicineCreate,
+  PrescriptionStatus,
+  RepetitionEnum,
+} from "@/client/PrescriptionsService"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -40,11 +46,50 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import { Plus } from "lucide-react"
 
+const FALLBACK_PRESCRIPTION_STATUSES = ["open", "completed", "cancelled"] as const satisfies readonly PrescriptionStatus[]
+
+const FALLBACK_REPETITIONS = [
+  "OD",
+  "BD",
+  "TDS",
+  "Once Weekly",
+  "Once in 10 Days",
+  "Fortnightly",
+  "Monthly",
+] as const satisfies readonly RepetitionEnum[]
+
+const isPrescriptionStatus = (value: string): value is PrescriptionStatus =>
+  (FALLBACK_PRESCRIPTION_STATUSES as readonly string[]).includes(value)
+
+const isRepetitionEnum = (value: string): value is RepetitionEnum =>
+  (FALLBACK_REPETITIONS as readonly string[]).includes(value)
+
+const normalizeEnumValues = (data: unknown, fallback: readonly string[]) => {
+  if (Array.isArray(data) && data.every((value) => typeof value === "string")) {
+    return data
+  }
+
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>
+    const candidateKeys = ["data", "values", "options", "enum_values"]
+
+    for (const key of candidateKeys) {
+      const candidate = record[key]
+      if (Array.isArray(candidate) && candidate.every((value) => typeof value === "string")) {
+        return candidate as string[]
+      }
+    }
+  }
+
+  return fallback
+}
+
 // Schema for existing medicine mode
 const existingMedicineSchema = z.object({
   mode: z.literal("existing"),
-  medicine_id: z.coerce.number().min(1, "Medicine is required"),
+  medicine_id: z.string().min(1, "Medicine is required"),
   quantity_prescribed: z.string().optional(),
+  frequency: z.string().min(1, "Frequency is required"),
 })
 
 // Schema for quick-add medicine mode
@@ -57,19 +102,12 @@ const quickAddMedicineSchema = z.object({
   manufacturer: z.string().optional(),
   description: z.string().optional(),
   quantity_prescribed: z.string().optional(),
+  frequency: z.string().min(1, "Frequency is required"),
 })
 
 const medicineSchema = z.union([existingMedicineSchema, quickAddMedicineSchema])
 
 const formSchema = z.object({
-  prescription_type: z.enum([
-    "Constitutional",
-    "Classical",
-    "Inter Current",
-    "Pure Bio Chemic",
-    "Mother Tincture",
-    "Patent",
-  ]).optional(),
   dosage: z.string().optional(),
   prescription_duration: z.string().optional(),
   instructions: z.string().optional(),
@@ -77,6 +115,7 @@ const formSchema = z.object({
   dietary_restrictions: z.string().optional(),
   avoidance: z.string().optional(),
   notes: z.string().optional(),
+  status: z.string().min(1, "Status is required").optional(),
   medicines: z.array(medicineSchema).min(1, "At least one medicine is required"),
 })
 
@@ -101,12 +140,36 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
     throwOnError: false,
   })
 
+  const { data: prescriptionStatusesData } = useQuery({
+    queryKey: ["doctor-enum", "PrescriptionStatus"],
+    queryFn: () => EnumsService.readDoctorEnum("PrescriptionStatus"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const { data: repetitionData } = useQuery({
+    queryKey: ["doctor-enum", "RepetitionEnum"],
+    queryFn: () => EnumsService.readDoctorEnum("RepetitionEnum"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const prescriptionStatusOptions = normalizeEnumValues(
+    prescriptionStatusesData,
+    FALLBACK_PRESCRIPTION_STATUSES,
+  )
+  const repetitionOptions = normalizeEnumValues(
+    repetitionData,
+    FALLBACK_REPETITIONS,
+  )
+
   const form = useForm<FormData, unknown, FormData>({
     resolver: zodResolver(formSchema) as Resolver<FormData>,
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      prescription_type: prescription.prescription_type,
       dosage: prescription.dosage || undefined,
       prescription_duration: prescription.prescription_duration || undefined,
       instructions: prescription.instructions || undefined,
@@ -114,13 +177,15 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
       dietary_restrictions: prescription.dietary_restrictions || undefined,
       avoidance: prescription.avoidance || undefined,
       notes: prescription.notes || undefined,
+      status: prescription.status || FALLBACK_PRESCRIPTION_STATUSES[0],
       medicines: prescription.medicines.length > 0
         ? prescription.medicines.map(m => ({
           mode: "existing",
           medicine_id: m.medicine_id,
           quantity_prescribed: m.quantity_prescribed || undefined,
+          frequency: m.frequency || FALLBACK_REPETITIONS[0],
         } as any))
-        : [{ mode: "existing", medicine_id: 0, quantity_prescribed: "" } as any],
+        : [{ mode: "existing", medicine_id: "", quantity_prescribed: "", frequency: FALLBACK_REPETITIONS[0] } as any],
     },
   })
 
@@ -152,6 +217,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
         return {
           medicine_id: m.medicine_id,
           quantity_prescribed: m.quantity_prescribed || undefined,
+          frequency: isRepetitionEnum(m.frequency) ? m.frequency : undefined,
         }
       } else {
         return {
@@ -164,6 +230,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
             description: m.description,
           },
           quantity_prescribed: m.quantity_prescribed || undefined,
+          frequency: isRepetitionEnum(m.frequency) ? m.frequency : undefined,
         }
       }
     })
@@ -176,6 +243,9 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
       dietary_restrictions: data.dietary_restrictions || undefined,
       avoidance: data.avoidance || undefined,
       notes: data.notes || undefined,
+      status: data.status && isPrescriptionStatus(data.status)
+        ? data.status
+        : undefined,
       medicines,
     }
     mutation.mutate(updateData)
@@ -200,13 +270,12 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              {/* Prescription Type */}
               <FormField
                 control={form.control}
-                name="prescription_type"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prescription Type</FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -217,12 +286,9 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Constitutional">Constitutional</SelectItem>
-                        <SelectItem value="Classical">Classical</SelectItem>
-                        <SelectItem value="Inter Current">Inter Current</SelectItem>
-                        <SelectItem value="Pure Bio Chemic">Pure Bio Chemic</SelectItem>
-                        <SelectItem value="Mother Tincture">Mother Tincture</SelectItem>
-                        <SelectItem value="Patent">Patent</SelectItem>
+                        {prescriptionStatusOptions.map((status) => (
+                          <SelectItem key={status} value={status}>{status}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -270,7 +336,7 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      append({ mode: "existing", medicine_id: 0, quantity_prescribed: "" } as any)
+                      append({ mode: "existing", medicine_id: "", quantity_prescribed: "", frequency: repetitionOptions[0] || FALLBACK_REPETITIONS[0] } as any)
                     }
                   >
                     <Plus className="mr-2 h-4 w-4" />
@@ -320,8 +386,8 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                                   Medicine <span className="text-destructive">*</span>
                                 </FormLabel>
                                 <Select
-                                  onValueChange={(value) => field.onChange(Number(value))}
-                                  value={field.value ? String(field.value) : ""}
+                                  onValueChange={field.onChange}
+                                  value={field.value || ""}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
@@ -367,6 +433,34 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                                     {...field}
                                   />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`medicines.${index}.frequency`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Frequency <span className="text-destructive">*</span>
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select frequency" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {repetitionOptions.map((frequency) => (
+                                      <SelectItem key={frequency} value={frequency}>{frequency}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -497,6 +591,34 @@ const EditPrescription = ({ prescription, onSuccess }: EditPrescriptionProps) =>
                                     {...field}
                                   />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`medicines.${index}.frequency`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Frequency <span className="text-destructive">*</span>
+                                </FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select frequency" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {repetitionOptions.map((frequency) => (
+                                      <SelectItem key={frequency} value={frequency}>{frequency}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
