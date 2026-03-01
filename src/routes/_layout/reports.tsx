@@ -304,7 +304,7 @@ function Reports() {
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Revenue</p>
-                      <p className="text-2xl font-bold">₹{financialSummary.total_revenue || 0}</p>
+                      <p className="text-2xl font-bold">Rs. {financialSummary.total_revenue || 0}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Total Appointments</p>
@@ -312,7 +312,7 @@ function Reports() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Avg per Appointment</p>
-                      <p className="text-2xl font-bold">₹{financialSummary.avg_revenue_per_appointment?.toFixed(2) || 0}</p>
+                      <p className="text-2xl font-bold">Rs. {financialSummary.avg_revenue_per_appointment?.toFixed(2) || 0}</p>
                     </div>
                   </div>
                   {financialSummary.revenue_by_period && financialSummary.revenue_by_period.length > 0 && (
@@ -323,7 +323,7 @@ function Reports() {
                           <div key={period.period} className="flex justify-between items-center">
                             <span className="text-sm">{period.period}</span>
                             <div className="text-right">
-                              <span className="text-sm font-semibold">₹{period.revenue}</span>
+                              <span className="text-sm font-semibold">Rs. {period.revenue}</span>
                               <span className="text-xs text-muted-foreground ml-2">({period.appointment_count} appts)</span>
                             </div>
                           </div>

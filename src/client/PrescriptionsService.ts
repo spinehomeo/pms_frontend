@@ -3,29 +3,23 @@ import type { CancelablePromise } from "./core/CancelablePromise";
 import { OpenAPI } from "./core/OpenAPI";
 import { request as __request } from "./core/request";
 
-export type PrescriptionType =
-  | "Constitutional"
-  | "Classical"
-  | "Inter Current"
-  | "Pure Bio Chemic"
-  | "Mother Tincture"
-  | "Patent";
+export type PrescriptionType = string;
 
-export type RepetitionEnum =
-  | "OD"
-  | "BD"
-  | "TDS"
-  | "Once Weekly"
-  | "Once in 10 Days"
-  | "Fortnightly"
-  | "Monthly";
+export type RepetitionEnum = string;
 
-export type PrescriptionStatus = "open" | "completed" | "cancelled";
+export type PrescriptionStatus = string;
+
+export interface FollowUpScheduleInput {
+  follow_up_date: string;
+  interval_days?: number;
+  auto_calculate?: boolean;
+  notes?: string;
+}
 
 export interface QuickAddMedicineData {
   name: string;
   potency: string;
-  potency_scale?: "C" | "X" | "Q";
+  potency_scale?: string;
   form?: string;
   manufacturer?: string;
   description?: string;
@@ -61,6 +55,7 @@ export interface PrescriptionCreate {
   avoidance?: string;
   notes?: string;
   status?: PrescriptionStatus;
+  follow_up_schedule?: FollowUpScheduleInput;
   medicines: PrescriptionMedicineCreate[];
 }
 
@@ -73,6 +68,7 @@ export interface PrescriptionUpdate {
   avoidance?: string;
   notes?: string;
   status?: PrescriptionStatus;
+  follow_up_schedule?: FollowUpScheduleInput;
   medicines?: PrescriptionMedicineCreate[];
 }
 
@@ -120,6 +116,7 @@ export interface PrescriptionPublic {
   avoidance?: string;
   notes?: string;
   status?: PrescriptionStatus;
+  follow_up_schedule?: FollowUpScheduleInput;
   medicines: PrescriptionMedicinePublic[];
   patient_name?: string;
   case_number?: string;

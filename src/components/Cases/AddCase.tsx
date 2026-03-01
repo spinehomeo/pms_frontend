@@ -384,7 +384,7 @@ const AddCase = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Duration <span className="text-destructive">*</span>
+                          Chief Complaint Duration <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input

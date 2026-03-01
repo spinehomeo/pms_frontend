@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { AppointmentsService } from "@/client"
+import { AppointmentsService, EnumsService } from "@/client"
 import type { AppointmentPublic, AppointmentUpdate } from "@/client/AppointmentsService"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,13 +37,14 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
+import { parseDoctorEnumOptions } from "@/lib/doctorEnums"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
   appointment_date: z.string().optional(),
   appointment_time: z.string().optional(),
   duration_minutes: z.number().min(15).max(480).optional(),
-  status: z.enum(["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"]).optional(),
+  status: z.string().optional(),
   consultation_type: z.string().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
@@ -60,6 +61,25 @@ const EditAppointment = ({ appointment, onSuccess }: EditAppointmentProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+
+  const { data: appointmentStatusEnumData } = useQuery({
+    queryKey: ["doctor-enum", "AppointmentStatus"],
+    queryFn: () => EnumsService.readDoctorEnum("AppointmentStatus"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const { data: consultationTypeEnumData } = useQuery({
+    queryKey: ["doctor-enum", "ConsultationType"],
+    queryFn: () => EnumsService.readDoctorEnum("ConsultationType"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const appointmentStatusOptions = parseDoctorEnumOptions(appointmentStatusEnumData)
+  const consultationTypeOptions = parseDoctorEnumOptions(consultationTypeEnumData)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -189,12 +209,11 @@ const EditAppointment = ({ appointment, onSuccess }: EditAppointmentProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="no_show">No Show</SelectItem>
+                          {appointmentStatusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -209,9 +228,20 @@ const EditAppointment = ({ appointment, onSuccess }: EditAppointmentProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Consultation Type</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select consultation type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {consultationTypeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

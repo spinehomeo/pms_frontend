@@ -9,7 +9,8 @@ export type AppointmentStatus =
   | "in_progress"
   | "completed"
   | "cancelled"
-  | "no_show";
+  | "no_show"
+  | string;
 
 export interface AppointmentsReadAppointmentsData {
   skip?: number;

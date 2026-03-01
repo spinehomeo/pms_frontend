@@ -9,10 +9,15 @@ import {
   AlertCircle,
   TrendingUp,
   DollarSign,
+  Wallet,
+  ArrowDownCircle,
+  Scale,
+  Receipt,
 } from "lucide-react"
 import { Suspense } from "react"
 
 import { DoctorStatisticsService } from "@/client"
+import { FinanceApi } from "@/services/financeApi"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAuth from "@/hooks/useAuth"
@@ -21,6 +26,13 @@ function getStatsQueryOptions() {
   return {
     queryFn: () => DoctorStatisticsService.getDoctorStats(),
     queryKey: ["doctor-stats"],
+  }
+}
+
+function getFinanceSummaryQueryOptions() {
+  return {
+    queryFn: () => FinanceApi.getDoctorSummary(),
+    queryKey: ["finance", "doctor-summary"],
   }
 }
 
@@ -63,7 +75,7 @@ function StatCard({ title, value, icon, description }: StatCardProps) {
 function StatsLoadingSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 12 }).map((_, i) => (
         <Card key={i}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <Skeleton className="h-4 w-25" />
@@ -81,6 +93,14 @@ function StatsLoadingSkeleton() {
 
 function DoctorStatsContent() {
   const { data: stats } = useSuspenseQuery(getStatsQueryOptions())
+  const { data: financeSummary } = useSuspenseQuery(getFinanceSummaryQueryOptions())
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2,
+    }).format(value)
 
   return (
     <div className="space-y-6">
@@ -108,6 +128,33 @@ function DoctorStatsContent() {
           value={stats.total_prescriptions ?? 0}
           icon={<FileText className="h-4 w-4" />}
           description="Prescriptions issued"
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Income"
+          value={formatCurrency(financeSummary.total_cash_in ?? 0)}
+          icon={<Wallet className="h-4 w-4" />}
+          description="All cash books combined"
+        />
+        <StatCard
+          title="Total Expenses"
+          value={formatCurrency(financeSummary.total_cash_out ?? 0)}
+          icon={<ArrowDownCircle className="h-4 w-4" />}
+          description="All cash out transactions"
+        />
+        <StatCard
+          title="Net Balance"
+          value={formatCurrency(financeSummary.net_balance ?? 0)}
+          icon={<Scale className="h-4 w-4" />}
+          description="Income minus expenses"
+        />
+        <StatCard
+          title="Transactions"
+          value={financeSummary.transaction_count ?? 0}
+          icon={<Receipt className="h-4 w-4" />}
+          description="Total finance entries"
         />
       </div>
 

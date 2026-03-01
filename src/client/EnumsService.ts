@@ -5,7 +5,16 @@ import { request as __request } from "./core/request";
 export type DoctorEnumName =
   | "PrescriptionType"
   | "PrescriptionStatus"
-  | "RepetitionEnum";
+  | "RepetitionEnum"
+  | "AppointmentStatus"
+  | "ConsultationType"
+  | "FollowupStatus"
+  | "CaseStatus"
+  | "ExceptionType"
+  | "ScaleEnum"
+  | "FormEnum"
+  | "ManufacturerEnum"
+  | "PrescriptionDuration";
 
 export class EnumsService {
   public static readDoctorEnum(

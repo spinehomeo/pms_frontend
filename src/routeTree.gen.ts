@@ -22,6 +22,7 @@ import { Route as LayoutPatientsRouteImport } from './routes/_layout/patients'
 import { Route as LayoutMedicinesRouteImport } from './routes/_layout/medicines'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutFollowupsRouteImport } from './routes/_layout/followups'
+import { Route as LayoutFinanceRouteImport } from './routes/_layout/finance'
 import { Route as LayoutCoreSettingsRouteImport } from './routes/_layout/core-settings'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAvailabilityRouteImport } from './routes/_layout/availability'
@@ -33,6 +34,7 @@ import { Route as LayoutWebContentServicesRouteImport } from './routes/_layout/w
 import { Route as LayoutWebContentHeroSectionRouteImport } from './routes/_layout/web-content/hero-section'
 import { Route as LayoutWebContentContactInfoRouteImport } from './routes/_layout/web-content/contact-info'
 import { Route as LayoutWebContentAboutDoctorRouteImport } from './routes/_layout/web-content/about-doctor'
+import { Route as LayoutFinanceCashBookIdRouteImport } from './routes/_layout/finance.$cashBookId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -98,6 +100,11 @@ const LayoutFollowupsRoute = LayoutFollowupsRouteImport.update({
   path: '/followups',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutFinanceRoute = LayoutFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutCoreSettingsRoute = LayoutCoreSettingsRouteImport.update({
   id: '/core-settings',
   path: '/core-settings',
@@ -158,6 +165,11 @@ const LayoutWebContentAboutDoctorRoute =
     path: '/web-content/about-doctor',
     getParentRoute: () => LayoutRoute,
   } as any)
+const LayoutFinanceCashBookIdRoute = LayoutFinanceCashBookIdRouteImport.update({
+  id: '/$cashBookId',
+  path: '/$cashBookId',
+  getParentRoute: () => LayoutFinanceRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -169,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/availability': typeof LayoutAvailabilityRoute
   '/cases': typeof LayoutCasesRoute
   '/core-settings': typeof LayoutCoreSettingsRoute
+  '/finance': typeof LayoutFinanceRouteWithChildren
   '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
   '/medicines': typeof LayoutMedicinesRoute
@@ -177,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof LayoutReportsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/finance/$cashBookId': typeof LayoutFinanceCashBookIdRoute
   '/web-content/about-doctor': typeof LayoutWebContentAboutDoctorRoute
   '/web-content/contact-info': typeof LayoutWebContentContactInfoRoute
   '/web-content/hero-section': typeof LayoutWebContentHeroSectionRoute
@@ -194,6 +208,7 @@ export interface FileRoutesByTo {
   '/availability': typeof LayoutAvailabilityRoute
   '/cases': typeof LayoutCasesRoute
   '/core-settings': typeof LayoutCoreSettingsRoute
+  '/finance': typeof LayoutFinanceRouteWithChildren
   '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
   '/medicines': typeof LayoutMedicinesRoute
@@ -202,6 +217,7 @@ export interface FileRoutesByTo {
   '/reports': typeof LayoutReportsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/finance/$cashBookId': typeof LayoutFinanceCashBookIdRoute
   '/web-content/about-doctor': typeof LayoutWebContentAboutDoctorRoute
   '/web-content/contact-info': typeof LayoutWebContentContactInfoRoute
   '/web-content/hero-section': typeof LayoutWebContentHeroSectionRoute
@@ -221,6 +237,7 @@ export interface FileRoutesById {
   '/_layout/availability': typeof LayoutAvailabilityRoute
   '/_layout/cases': typeof LayoutCasesRoute
   '/_layout/core-settings': typeof LayoutCoreSettingsRoute
+  '/_layout/finance': typeof LayoutFinanceRouteWithChildren
   '/_layout/followups': typeof LayoutFollowupsRoute
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/medicines': typeof LayoutMedicinesRoute
@@ -229,6 +246,7 @@ export interface FileRoutesById {
   '/_layout/reports': typeof LayoutReportsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/finance/$cashBookId': typeof LayoutFinanceCashBookIdRoute
   '/_layout/web-content/about-doctor': typeof LayoutWebContentAboutDoctorRoute
   '/_layout/web-content/contact-info': typeof LayoutWebContentContactInfoRoute
   '/_layout/web-content/hero-section': typeof LayoutWebContentHeroSectionRoute
@@ -248,6 +266,7 @@ export interface FileRouteTypes {
     | '/availability'
     | '/cases'
     | '/core-settings'
+    | '/finance'
     | '/followups'
     | '/items'
     | '/medicines'
@@ -256,6 +275,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/'
+    | '/finance/$cashBookId'
     | '/web-content/about-doctor'
     | '/web-content/contact-info'
     | '/web-content/hero-section'
@@ -273,6 +293,7 @@ export interface FileRouteTypes {
     | '/availability'
     | '/cases'
     | '/core-settings'
+    | '/finance'
     | '/followups'
     | '/items'
     | '/medicines'
@@ -281,6 +302,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/'
+    | '/finance/$cashBookId'
     | '/web-content/about-doctor'
     | '/web-content/contact-info'
     | '/web-content/hero-section'
@@ -299,6 +321,7 @@ export interface FileRouteTypes {
     | '/_layout/availability'
     | '/_layout/cases'
     | '/_layout/core-settings'
+    | '/_layout/finance'
     | '/_layout/followups'
     | '/_layout/items'
     | '/_layout/medicines'
@@ -307,6 +330,7 @@ export interface FileRouteTypes {
     | '/_layout/reports'
     | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/finance/$cashBookId'
     | '/_layout/web-content/about-doctor'
     | '/_layout/web-content/contact-info'
     | '/_layout/web-content/hero-section'
@@ -416,6 +440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutFollowupsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/finance': {
+      id: '/_layout/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof LayoutFinanceRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/core-settings': {
       id: '/_layout/core-settings'
       path: '/core-settings'
@@ -493,8 +524,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutWebContentAboutDoctorRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/finance/$cashBookId': {
+      id: '/_layout/finance/$cashBookId'
+      path: '/$cashBookId'
+      fullPath: '/finance/$cashBookId'
+      preLoaderRoute: typeof LayoutFinanceCashBookIdRouteImport
+      parentRoute: typeof LayoutFinanceRoute
+    }
   }
 }
+
+interface LayoutFinanceRouteChildren {
+  LayoutFinanceCashBookIdRoute: typeof LayoutFinanceCashBookIdRoute
+}
+
+const LayoutFinanceRouteChildren: LayoutFinanceRouteChildren = {
+  LayoutFinanceCashBookIdRoute: LayoutFinanceCashBookIdRoute,
+}
+
+const LayoutFinanceRouteWithChildren = LayoutFinanceRoute._addFileChildren(
+  LayoutFinanceRouteChildren,
+)
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
@@ -502,6 +552,7 @@ interface LayoutRouteChildren {
   LayoutAvailabilityRoute: typeof LayoutAvailabilityRoute
   LayoutCasesRoute: typeof LayoutCasesRoute
   LayoutCoreSettingsRoute: typeof LayoutCoreSettingsRoute
+  LayoutFinanceRoute: typeof LayoutFinanceRouteWithChildren
   LayoutFollowupsRoute: typeof LayoutFollowupsRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutMedicinesRoute: typeof LayoutMedicinesRoute
@@ -524,6 +575,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAvailabilityRoute: LayoutAvailabilityRoute,
   LayoutCasesRoute: LayoutCasesRoute,
   LayoutCoreSettingsRoute: LayoutCoreSettingsRoute,
+  LayoutFinanceRoute: LayoutFinanceRouteWithChildren,
   LayoutFollowupsRoute: LayoutFollowupsRoute,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutMedicinesRoute: LayoutMedicinesRoute,

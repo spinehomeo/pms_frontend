@@ -165,7 +165,7 @@ const EditCase = ({ caseItem, onSuccess }: EditCaseProps) => {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration</FormLabel>
+                    <FormLabel>Chief Complaint Duration</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g., 3 days, 2 weeks"

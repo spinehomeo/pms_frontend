@@ -66,7 +66,7 @@ export const columns: ColumnDef<PatientCasePublic>[] = [
   },
   {
     accessorKey: "duration",
-    header: "Duration",
+    header: "Chief Complaint Duration",
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.duration}

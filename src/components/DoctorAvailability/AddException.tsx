@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { DoctorAvailabilityService, type ExceptionType } from "@/client"
+import { DoctorAvailabilityService, EnumsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -36,8 +36,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
-
-const exceptionTypes: ExceptionType[] = ["unavailable", "custom_hours", "holiday"]
+import { parseDoctorEnumOptions } from "@/lib/doctorEnums"
 
 const formSchema = z
     .object({
@@ -50,14 +49,14 @@ const formSchema = z
             },
             { message: "Exception date cannot be in the past" }
         ),
-        exception_type: z.enum(exceptionTypes, { message: "Exception type is required" }),
+        exception_type: z.string().min(1, { message: "Exception type is required" }),
         start_time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Format: HH:MM" }).optional().or(z.literal("")),
         end_time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Format: HH:MM" }).optional().or(z.literal("")),
         reason: z.string().optional(),
     })
     .refine(
         (data) => {
-            if (data.exception_type === "custom_hours") {
+            if (isCustomHoursType(data.exception_type)) {
                 return data.start_time && data.end_time
             }
             return true
@@ -69,7 +68,7 @@ const formSchema = z
     )
     .refine(
         (data) => {
-            if (data.exception_type === "custom_hours" && data.start_time && data.end_time) {
+            if (isCustomHoursType(data.exception_type) && data.start_time && data.end_time) {
                 const [startHour, startMin] = data.start_time.split(":").map(Number)
                 const [endHour, endMin] = data.end_time.split(":").map(Number)
                 const startTotalMin = startHour * 60 + startMin
@@ -86,6 +85,9 @@ const formSchema = z
 
 type FormData = z.infer<typeof formSchema>
 
+const isCustomHoursType = (value: string) =>
+    value.toLowerCase().replace(/[\s-]+/g, "_") === "custom_hours"
+
 interface AddExceptionProps {
     selectedDate?: Date;
     onSuccess?: () => void;
@@ -97,6 +99,16 @@ const AddException = ({ selectedDate, onSuccess }: AddExceptionProps) => {
     const queryClient = useQueryClient()
     const { showSuccessToast, showErrorToast } = useCustomToast()
 
+    const { data: exceptionTypeEnumData } = useQuery({
+        queryKey: ["doctor-enum", "ExceptionType"],
+        queryFn: () => EnumsService.readDoctorEnum("ExceptionType"),
+        enabled: isOpen,
+        retry: false,
+        throwOnError: false,
+    })
+
+    const exceptionTypeOptions = parseDoctorEnumOptions(exceptionTypeEnumData)
+
     const defaultDate = selectedDate
         ? selectedDate.toISOString().split("T")[0]
         : new Date().toISOString().split("T")[0]
@@ -106,12 +118,20 @@ const AddException = ({ selectedDate, onSuccess }: AddExceptionProps) => {
         mode: "onBlur",
         defaultValues: {
             exception_date: defaultDate,
-            exception_type: "unavailable",
+            exception_type: "",
             start_time: "09:00",
             end_time: "17:00",
             reason: "",
         },
     })
+
+    useEffect(() => {
+        if (!form.getValues("exception_type") && exceptionTypeOptions.length > 0) {
+            const defaultType = exceptionTypeOptions[0].value
+            form.setValue("exception_type", defaultType)
+            setShowCustomHourFields(isCustomHoursType(defaultType))
+        }
+    }, [exceptionTypeOptions, form])
 
     const mutation = useMutation({
         mutationFn: async (data: FormData) => {
@@ -122,7 +142,7 @@ const AddException = ({ selectedDate, onSuccess }: AddExceptionProps) => {
             }
 
             // Only include times for custom_hours
-            if (data.exception_type === "custom_hours") {
+            if (isCustomHoursType(data.exception_type)) {
                 payload.start_time = data.start_time ? `${data.start_time}:00` : undefined
                 payload.end_time = data.end_time ? `${data.end_time}:00` : undefined
             }
@@ -145,9 +165,9 @@ const AddException = ({ selectedDate, onSuccess }: AddExceptionProps) => {
         },
     })
 
-    const handleExceptionTypeChange = (value: ExceptionType) => {
+    const handleExceptionTypeChange = (value: string) => {
         form.setValue("exception_type", value)
-        setShowCustomHourFields(value === "custom_hours")
+        setShowCustomHourFields(isCustomHoursType(value))
     }
 
     return (
@@ -197,15 +217,11 @@ const AddException = ({ selectedDate, onSuccess }: AddExceptionProps) => {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="unavailable">
-                                                Unavailable (Not working)
-                                            </SelectItem>
-                                            <SelectItem value="custom_hours">
-                                                Custom Hours (Different schedule)
-                                            </SelectItem>
-                                            <SelectItem value="holiday">
-                                                Holiday
-                                            </SelectItem>
+                                            {exceptionTypeOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

@@ -1,0 +1,215 @@
+Got it 👍
+Below is the **updated, corrected, and fully structured prompt**, now **explicitly mentioning enum type keys** and **including the additional Add Prescription → Medicine Frequency validation task**, exactly as requested.
+
+---
+
+# 📌 Dashboard, Enums & Prescription Updates – Final Task List
+
+## 1. Finance Stats
+
+* Display **Finance statistics** on the **Main Dashboard view** currenntly you are shwoing them in the finance section name is Total INcome, Total Expenss, net balance, transactions.
+
+---
+
+## 2. Dashboard Menu Order
+
+Update the sidebar/menu order to the following sequence:
+
+1. Dashboard
+2. Patient
+3. Appointments
+4. Cases
+5. Follow-ups
+6. Reports
+7. Availability
+8. Remedies
+9. Content
+10. Finance
+11. Core Settings
+
+---
+
+## 3. Centralized Enum Usage (Mandatory)
+
+All dropdowns must use the **Doctor Enum API** and must be **database-driven**, not hardcoded.
+
+**API**
+
+```
+GET /enums/doctor/{enum_type_key}
+```
+
+This must be applied in **both Add and Update forms**.
+
+---
+
+## 4. Enum Mapping by Module (Very Important)
+
+### A) Appointments
+
+* **Status field**
+
+  * Enum Type Key: `AppointmentStatus`
+
+* **Consultation Type (if applicable)**
+
+  * Enum Type Key: `ConsultationType`
+
+---
+
+### B) Follow-ups
+
+* **Follow-up Status**
+
+  * Enum Type Key: `FollowupStatus`
+
+---
+
+### C) Cases
+
+* **Case Status**
+
+  * Enum Type Key: `CaseStatus`
+
+* **Field Label Update**
+
+  * Rename:
+
+    * ❌ `Duration Name`
+    * ✅ `Chief Complaint Duration`
+
+---
+
+### D) Availability → Exception Availability
+
+* **Exception Type field**
+
+  * Enum Type Key: `ExceptionType`
+
+Used for:
+
+* Holiday
+* Emergency
+* Personal Leave
+* Unavailable
+* Custom Hours
+
+---
+
+### E) Prescriptions (Main Form)
+
+#### 1) Prescription Type
+
+* Enum Type Key: `PrescriptionType`
+
+#### 2) Prescription Status
+
+* Enum Type Key: `PrescriptionStatus`
+
+#### 3) Prescription Duration
+
+* Enum Type Key: (as already defined in enum master, ensure mapping is correct)
+
+---
+
+### F) Add Prescription → Medicine Options (Inside Prescription)
+
+#### Mandatory Enum Usage:
+
+* **Scale**
+
+  * Enum Type Key: `ScaleEnum`
+
+* **Form**
+
+  * Enum Type Key: `FormEnum`
+
+* **Frequency / Repetition**
+
+  * Enum Type Key: `RepetitionEnum`
+  * API:
+
+    ```
+    GET /enums/doctor/RepetitionEnum
+    ```
+
+⚠️ **Important Task**
+
+* This API is **currently being called**, but it is **not confirmed** whether the dropdown values are actually populated from this response.
+* **Ensure that the Frequency dropdown values strictly reflect the API response** from `RepetitionEnum` and are not hardcoded or coming from any fallback list.
+
+---
+
+### G) Add Medicine Section (Inventory / Master)
+
+Use the following enum type keys:
+
+* **Scale** → `ScaleEnum`
+* **Potency** → `ScaleEnum` (if potency stored separately, confirm mapping)
+* **Manufacturer** → `ManufacturerEnum`
+* **Form** → `FormEnum`
+
+---
+
+## 5. Prescription Form UI Changes
+
+* **Hide** the following fields in **Add Prescription** form:
+
+  * `dosage`
+  * `prescription_duration`
+
+(Backend support remains unchanged; this is a UI-level requirement.)
+
+---
+
+## 6. Missing Follow-Up Date (Critical Fix)
+
+* The **Follow-Up Date** field is missing in the **Add Prescription** form.
+* Add it according to the API structure below.
+
+---
+
+## 7. Prescription API Reference
+
+**POST**
+
+```
+/prescriptions/
+```
+
+**Request Body Example**
+
+```json
+{
+  "prescription_type": "string",
+  "dosage": "string",
+  "prescription_duration": "string",
+  "duration_days": 1,
+  "instructions": "string",
+  "follow_up_advice": "string",
+  "dietary_restrictions": "string",
+  "avoidance": "string",
+  "notes": "string",
+  "case_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "medicines": [],
+  "status": "open",
+  "follow_up_schedule": {
+    "follow_up_date": "2026-03-01",
+    "interval_days": 7,
+    "auto_calculate": false,
+    "notes": "string"
+  }
+}
+```
+
+---
+
+## 8. General Rules (Do Not Skip)
+
+1. No dropdown values should be hardcoded.
+2. Only **active (`is_active = true`) enum values** should be shown.
+3. Sorting must follow `sort_order`.
+4. Same enum logic must work for **Add + Update** forms.
+5. Enum usage must remain consistent across all modules.
+
+---

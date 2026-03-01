@@ -72,7 +72,7 @@ const ViewCase = ({ caseItem }: ViewCaseProps) => {
                 <p className="text-base font-semibold">{caseItem.chief_complaint_patient}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Duration</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Chief Complaint Duration</p>
                 <p className="text-base">{caseItem.duration}</p>
               </div>
             </div>

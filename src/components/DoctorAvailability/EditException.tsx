@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Edit } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { DoctorAvailabilityService, type DoctorExceptionPublic, type ExceptionType } from "@/client"
+import { DoctorAvailabilityService, EnumsService, type DoctorExceptionPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -35,19 +35,21 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
+import { parseDoctorEnumOptions } from "@/lib/doctorEnums"
 
-const exceptionTypes: ExceptionType[] = ["unavailable", "custom_hours", "holiday"]
+const isCustomHoursType = (value: string) =>
+    value.toLowerCase().replace(/[\s-]+/g, "_") === "custom_hours"
 
 const formSchema = z
     .object({
-        exception_type: z.enum(exceptionTypes, { message: "Exception type is required" }),
+        exception_type: z.string().min(1, { message: "Exception type is required" }),
         start_time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Format: HH:MM" }).optional().or(z.literal("")),
         end_time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Format: HH:MM" }).optional().or(z.literal("")),
         reason: z.string().optional(),
     })
     .refine(
         (data) => {
-            if (data.exception_type === "custom_hours") {
+            if (isCustomHoursType(data.exception_type)) {
                 return data.start_time && data.end_time
             }
             return true
@@ -59,7 +61,7 @@ const formSchema = z
     )
     .refine(
         (data) => {
-            if (data.exception_type === "custom_hours" && data.start_time && data.end_time) {
+            if (isCustomHoursType(data.exception_type) && data.start_time && data.end_time) {
                 const [startHour, startMin] = data.start_time.split(":").map(Number)
                 const [endHour, endMin] = data.end_time.split(":").map(Number)
                 const startTotalMin = startHour * 60 + startMin
@@ -85,6 +87,15 @@ const EditException = ({ exception, onSuccess }: EditExceptionProps) => {
     const queryClient = useQueryClient()
     const { showSuccessToast, showErrorToast } = useCustomToast()
 
+    const { data: exceptionTypeEnumData } = useQuery({
+        queryKey: ["doctor-enum", "ExceptionType"],
+        queryFn: () => EnumsService.readDoctorEnum("ExceptionType"),
+        retry: false,
+        throwOnError: false,
+    })
+
+    const exceptionTypeOptions = parseDoctorEnumOptions(exceptionTypeEnumData)
+
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         mode: "onBlur",
@@ -104,7 +115,7 @@ const EditException = ({ exception, onSuccess }: EditExceptionProps) => {
             }
 
             // Only include times for custom_hours
-            if (data.exception_type === "custom_hours") {
+            if (isCustomHoursType(data.exception_type)) {
                 payload.start_time = data.start_time ? `${data.start_time}:00` : undefined
                 payload.end_time = data.end_time ? `${data.end_time}:00` : undefined
             }
@@ -156,15 +167,11 @@ const EditException = ({ exception, onSuccess }: EditExceptionProps) => {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="unavailable">
-                                                Unavailable (Not working)
-                                            </SelectItem>
-                                            <SelectItem value="custom_hours">
-                                                Custom Hours (Different schedule)
-                                            </SelectItem>
-                                            <SelectItem value="holiday">
-                                                Holiday
-                                            </SelectItem>
+                                            {exceptionTypeOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -172,7 +179,7 @@ const EditException = ({ exception, onSuccess }: EditExceptionProps) => {
                             )}
                         />
 
-                        {form.watch("exception_type") === "custom_hours" && (
+                        {isCustomHoursType(form.watch("exception_type")) && (
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}

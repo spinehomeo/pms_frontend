@@ -7,8 +7,8 @@ import { request as __request } from "./core/request";
 // ENUMS
 // ============================================================================
 
-export type ScaleEnum = "C" | "X" | "Q";
-export type PotencyScale = "C" | "X" | "Q";
+export type ScaleEnum = "C" | "X" | "Q" | string;
+export type PotencyScale = "C" | "X" | "Q" | string;
 
 export type FormEnum =
   | "Diskette"
@@ -17,7 +17,8 @@ export type FormEnum =
   | "Bio Chemic"
   | "Homoeo Tabs"
   | "Globules"
-  | "Dilutions";
+  | "Dilutions"
+  | string;
 
 export type ManufacturerEnum =
   | "Schwabe"
@@ -30,7 +31,8 @@ export type ManufacturerEnum =
   | "Kent"
   | "Brooks"
   | "Waris Shah"
-  | "Self Packing";
+  | "Self Packing"
+  | string;
 
 // ============================================================================
 // DATA MODELS - Responses

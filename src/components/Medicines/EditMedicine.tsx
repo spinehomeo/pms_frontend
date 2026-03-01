@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { MedicinesService, type MedicineUpdate, type MedicinePublic } from "@/client"
+import { EnumsService, MedicinesService, type MedicineUpdate, type MedicinePublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -35,15 +36,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
+import { parseDoctorEnumOptions } from "@/lib/doctorEnums"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   potency: z.string().optional(),
-  potency_scale: z.enum(["C", "X", "Q"]).optional(),
-  form: z.enum(["Diskette", "SOM", "Blankets", "Bio Chemic", "Homoeo Tabs", "Globules", "Dilutions"]).optional(),
-  manufacturer: z.enum(["Schwabe", "Reckweg", "Lemasar", "Dolisos", "Kamal", "Masood", "BM", "Kent", "Brooks", "Waris Shah", "Self Packing"]).optional(),
+  potency_scale: z.string().optional(),
+  form: z.string().optional(),
+  manufacturer: z.string().optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -58,6 +60,34 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
+  const { data: scaleEnumData } = useQuery({
+    queryKey: ["doctor-enum", "ScaleEnum"],
+    queryFn: () => EnumsService.readDoctorEnum("ScaleEnum"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const { data: formEnumData } = useQuery({
+    queryKey: ["doctor-enum", "FormEnum"],
+    queryFn: () => EnumsService.readDoctorEnum("FormEnum"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const { data: manufacturerEnumData } = useQuery({
+    queryKey: ["doctor-enum", "ManufacturerEnum"],
+    queryFn: () => EnumsService.readDoctorEnum("ManufacturerEnum"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const scaleOptions = parseDoctorEnumOptions(scaleEnumData)
+  const formOptions = parseDoctorEnumOptions(formEnumData)
+  const manufacturerOptions = parseDoctorEnumOptions(manufacturerEnumData)
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
     mode: "onBlur",
@@ -71,6 +101,18 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
       manufacturer: medicine.manufacturer ?? undefined,
     },
   })
+
+  useEffect(() => {
+    if (isOpen && !form.getValues("potency_scale") && scaleOptions.length > 0) {
+      form.setValue("potency_scale", scaleOptions[0].value)
+    }
+  }, [form, isOpen, scaleOptions])
+
+  useEffect(() => {
+    if (isOpen && !form.getValues("form") && formOptions.length > 0) {
+      form.setValue("form", formOptions[0].value)
+    }
+  }, [form, formOptions, isOpen])
 
   const mutation = useMutation({
     mutationFn: (data: MedicineUpdate) =>
@@ -176,7 +218,7 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
                       <FormLabel>Scale</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -184,9 +226,11 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="C">C</SelectItem>
-                          <SelectItem value="X">X</SelectItem>
-                          <SelectItem value="Q">Q</SelectItem>
+                          {scaleOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -202,7 +246,7 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
                       <FormLabel>Form</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -210,13 +254,11 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Diskette">Diskette</SelectItem>
-                          <SelectItem value="SOM">SOM</SelectItem>
-                          <SelectItem value="Blankets">Blankets</SelectItem>
-                          <SelectItem value="Bio Chemic">Bio Chemic</SelectItem>
-                          <SelectItem value="Homoeo Tabs">Homoeo Tabs</SelectItem>
-                          <SelectItem value="Globules">Globules</SelectItem>
-                          <SelectItem value="Dilutions">Dilutions</SelectItem>
+                          {formOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -233,7 +275,7 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
                     <FormLabel>Manufacturer</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -241,17 +283,11 @@ const EditMedicine = ({ medicine, onSuccess }: EditMedicineProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Schwabe">Schwabe</SelectItem>
-                        <SelectItem value="Reckweg">Reckweg</SelectItem>
-                        <SelectItem value="Lemasar">Lemasar</SelectItem>
-                        <SelectItem value="Dolisos">Dolisos</SelectItem>
-                        <SelectItem value="Kamal">Kamal</SelectItem>
-                        <SelectItem value="Masood">Masood</SelectItem>
-                        <SelectItem value="BM">BM</SelectItem>
-                        <SelectItem value="Kent">Kent</SelectItem>
-                        <SelectItem value="Brooks">Brooks</SelectItem>
-                        <SelectItem value="Waris Shah">Waris Shah</SelectItem>
-                        <SelectItem value="Self Packing">Self Packing</SelectItem>
+                        {manufacturerOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

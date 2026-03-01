@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
-import { AppointmentsService, PatientsService } from "@/client"
+import { AppointmentsService, EnumsService, PatientsService } from "@/client"
 import type { AppointmentCreate } from "@/client/AppointmentsService"
 import type { PatientPublic } from "@/client/PatientsService"
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
+import { parseDoctorEnumOptions } from "@/lib/doctorEnums"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
@@ -46,8 +47,8 @@ const formSchema = z.object({
   appointment_date: z.string().min(1, { message: "Date is required" }),
   appointment_time: z.string().min(1, { message: "Time is required" }),
   duration_minutes: z.number().min(15).max(480),
-  status: z.enum(["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"]),
-  consultation_type: z.string(),
+  status: z.string().min(1, { message: "Status is required" }),
+  consultation_type: z.string().min(1, { message: "Consultation type is required" }),
   reason: z.string().optional(),
   notes: z.string().optional(),
 })
@@ -92,6 +93,25 @@ const AddAppointment = () => {
     enabled: isOpen,
   })
 
+  const { data: appointmentStatusEnumData } = useQuery({
+    queryKey: ["doctor-enum", "AppointmentStatus"],
+    queryFn: () => EnumsService.readDoctorEnum("AppointmentStatus"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const { data: consultationTypeEnumData } = useQuery({
+    queryKey: ["doctor-enum", "ConsultationType"],
+    queryFn: () => EnumsService.readDoctorEnum("ConsultationType"),
+    enabled: isOpen,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const appointmentStatusOptions = parseDoctorEnumOptions(appointmentStatusEnumData)
+  const consultationTypeOptions = parseDoctorEnumOptions(consultationTypeEnumData)
+
   // Filter patients based on search input
   const filteredPatients = useMemo(() => {
     if (!patientsData?.data) return []
@@ -128,12 +148,24 @@ const AddAppointment = () => {
       appointment_date: new Date().toISOString().split("T")[0],
       appointment_time: "09:00",
       duration_minutes: 30,
-      status: "scheduled",
-      consultation_type: "first",
+      status: "",
+      consultation_type: "",
       reason: "",
       notes: "",
     },
   })
+
+  useEffect(() => {
+    if (!form.getValues("status") && appointmentStatusOptions.length > 0) {
+      form.setValue("status", appointmentStatusOptions[0].value)
+    }
+  }, [appointmentStatusOptions, form])
+
+  useEffect(() => {
+    if (!form.getValues("consultation_type") && consultationTypeOptions.length > 0) {
+      form.setValue("consultation_type", consultationTypeOptions[0].value)
+    }
+  }, [consultationTypeOptions, form])
 
   // Watch date and time fields to reset availability check
   const watchDate = useWatch({ control: form.control, name: "appointment_date" })
@@ -403,12 +435,11 @@ const AddAppointment = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="scheduled">Scheduled</SelectItem>
-                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                            <SelectItem value="no_show">No Show</SelectItem>
+                            {appointmentStatusOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -454,12 +485,20 @@ const AddAppointment = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Consultation Type</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., first, follow-up, emergency"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select consultation type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {consultationTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
