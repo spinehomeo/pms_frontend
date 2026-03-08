@@ -28,6 +28,7 @@ export interface FollowUpCreate {
   general_state?: string;
   plan?: string;
   next_follow_up_date?: string;
+  custom_fields?: Record<string, string>;
 }
 
 export interface FollowUpUpdate {
