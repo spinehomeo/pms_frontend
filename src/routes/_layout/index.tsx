@@ -98,7 +98,7 @@ function DoctorStatsContent() {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "INR",
+      currency: "PKR",
       minimumFractionDigits: 2,
     }).format(value)
 

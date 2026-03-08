@@ -385,20 +385,6 @@ const AddPrescription = () => {
                                 )}
                             />
 
-                            <FormField
-                                control={form.control}
-                                name="follow_up_date"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Follow-Up Date</FormLabel>
-                                        <FormControl>
-                                            <Input type="date" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
                             <div className="border-t pt-4">
                                 <div className="mb-4 flex items-center justify-between">
                                     <FormLabel>
@@ -733,6 +719,20 @@ const AddPrescription = () => {
                                         <FormLabel>Follow-up Advice</FormLabel>
                                         <FormControl>
                                             <Textarea placeholder="Follow-up instructions" {...field} rows={2} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="follow_up_date"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Follow-Up Date</FormLabel>
+                                        <FormControl>
+                                            <Input type="date" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

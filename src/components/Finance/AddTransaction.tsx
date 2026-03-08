@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
+import { Minus, Plus } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -151,12 +151,16 @@ interface AddTransactionProps {
     cashBookId: string | null
     triggerLabel?: string
     fixedNatureCode?: "CASH_IN" | "CASH_OUT"
+    triggerVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+    triggerClassName?: string
 }
 
 const AddTransaction = ({
     cashBookId,
     triggerLabel = "Add Transaction",
     fixedNatureCode,
+    triggerVariant = "default",
+    triggerClassName,
 }: AddTransactionProps) => {
     const [isOpen, setIsOpen] = useState(false)
     const [customFieldValues, setCustomFieldValues] = useState<Record<string, CustomFieldValue>>({})
@@ -351,8 +355,8 @@ const AddTransaction = ({
             }}
         >
             <DialogTrigger asChild>
-                <Button disabled={!cashBookId}>
-                    <Plus className="mr-2 h-4 w-4" />
+                <Button disabled={!cashBookId} variant={triggerVariant} className={triggerClassName}>
+                    {fixedNatureCode === "CASH_OUT" ? <Minus className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
                     {triggerLabel}
                 </Button>
             </DialogTrigger>

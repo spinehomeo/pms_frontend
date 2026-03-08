@@ -71,6 +71,7 @@ export interface FollowUpPublic {
   plan?: string;
   patient_name?: string;
   case_number?: string;
+  status?: string;
 }
 
 export interface FollowUpsPublic {

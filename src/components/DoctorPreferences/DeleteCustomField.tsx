@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
-import { DoctorPreferencesService, type DoctorField } from "@/client"
+import { DoctorPreferencesService, type DoctorField, type FormType } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -18,11 +18,12 @@ import { handleError } from "@/utils"
 
 interface DeleteCustomFieldProps {
     field: DoctorField
+    formType?: FormType
     open?: boolean
     onOpenChange?: (open: boolean) => void
 }
 
-const DeleteCustomField = ({ field, open: controlledOpen, onOpenChange }: DeleteCustomFieldProps) => {
+const DeleteCustomField = ({ field, formType = "cases", open: controlledOpen, onOpenChange }: DeleteCustomFieldProps) => {
     const [internalOpen, setInternalOpen] = useState(false)
     const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen
     const handleOpenChange = onOpenChange || setInternalOpen
@@ -33,6 +34,7 @@ const DeleteCustomField = ({ field, open: controlledOpen, onOpenChange }: Delete
         mutationFn: async () => {
             return DoctorPreferencesService.deleteCustomField({
                 field_name: field.field_name,
+                form_type: formType,
             })
         },
         onSuccess: () => {

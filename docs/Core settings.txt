@@ -1,0 +1,236 @@
+# Core Settings Integration Guide
+
+1. Doctor Preferences Integration
+
+(a) Integrate **DOCTOR_PREFERENCES_API_GUIDE** within **Core Settings**.
+(b) Apply the same implementation logic already used in:
+(i) Cases
+(ii) Follow-ups
+
+
+
+2. Currency Symbol Update
+
+(a) The **₹ symbol is not provided by the backend**.
+(b) Replace all occurrences of **₹** with **“Rs”** across the application (UI level).
+
+
+
+
+4. Dynamic Enum Section (Core Settings)
+
+Create a **Dynamic Enum Management** module in Core Settings.
+
+(a) Follow **ENUM_PREFERENCES_FRONTEND_GUIDE** for UI and behavior.
+(b) Apply dynamic enum usage across the entire application (all dropdowns).
+
+API Endpoint
+
+**GET** `/enums/doctor/all`
+Returns: List of all enum groups with their options.
+
+
+
+# Master Enum Overview
+
+The system currently contains the following enum groups:
+
+(a) AppointmentStatus
+(b) CaseStatus
+(c) ConsultationType
+(d) DayOfWeek
+(e) ExceptionType
+(f) FollowupStatus
+(g) ManufacturerEnum
+(h) FormEnum
+(i) PatientGender
+(j) PrescriptionStatus
+(k) PrescriptionType
+(l) RepetitionEnum
+(m) ScaleEnum
+
+Enum Record Structure
+
+Each enum item contains:
+
+(a) id (UUID)
+(b) value (system key)
+(c) label (display text)
+(d) sort_order
+(e) is_active
+(f) is_system
+(g) enum_type
+(h) created metadata
+
+
+
+Master Enum Dropdown Options
+
+(a) AppointmentStatus
+
+pending → Pending
+scheduled → Scheduled
+confirmed → Confirmed
+cancelled → Cancelled
+completed → Completed
+no-show → No Show
+unknown → Unknown
+
+
+
+(b) CaseStatus
+
+open → Open
+active → Active
+closed → Closed
+archived → Archived
+
+
+
+(c) ConsultationType
+
+first → First Consultation
+follow-up → Follow-Up Consultation
+emergency → Emergency Consultation
+review → Review Consultation
+
+
+
+(d) DayOfWeek
+
+monday → Monday
+tuesday → Tuesday
+wednesday → Wednesday
+thursday → Thursday
+friday → Friday
+saturday → Saturday
+sunday → Sunday
+
+
+
+(e) ExceptionType
+
+holiday → Holiday
+emergency → Emergency
+personal leave → Personal Leave
+unavailable → Unavailable
+custom_hours → Custom Hours
+
+
+
+(f) FollowupStatus
+
+scheduled → Scheduled
+completed → Completed
+pending → Pending
+cancelled → Cancelled
+
+
+
+(g) ManufacturerEnum
+
+manufacturer a → Manufacturer A
+manufacturer b → Manufacturer B
+local → Local
+schwabe → Schwabe
+reckweg → Reckweg
+lemasar → Lemasar
+dolisos → Dolisos
+kamal → Kamal
+masood → Masood
+bm → Bm
+kent → Kent
+brooks → Brooks
+waris shah → Waris Shah
+self packing → Self Packing
+
+
+
+(h) FormEnum
+
+tablet → Tablet
+syrup → Syrup
+capsule → Capsule
+injection → Injection
+drops → Drops
+globules → Globules
+powder → Powder
+diskette → Diskette
+som → Som
+blankets → Blankets
+bio chemic → Bio Chemic
+homoeo tabs → Homoeo Tabs
+dilutions → Dilutions
+
+
+
+(i) PatientGender
+
+male → Male
+female → Female
+other → Other
+child → Child
+
+
+
+(j) PrescriptionStatus
+
+open → Open
+completed → Completed
+cancelled → Cancelled
+
+
+
+(k) PrescriptionType
+
+constitutional → Constitutional
+classical → Classical
+intercurrent → Intercurrent
+bio chemic → Bio Chemic
+pure bio chemic → Pure Bio Chemic
+mother tincture → Mother Tincture
+patent → Patent
+
+
+
+(l) RepetitionEnum
+
+od → Once Daily (Od)
+bd → Twice Daily (Bd)
+tds → Three Times Daily (Tds)
+four times daily → Four Times Daily
+once weekly → Once Weekly
+as needed → As Needed
+before sleep → Before Sleep
+once in 10 days → Once In 10 Days
+fortnightly → Fortnightly
+weekly → Weekly
+monthly → Monthly
+
+
+
+(m) ScaleEnum
+
+x → Decimal (X)
+low → Low
+c → Centesimal (C)
+medium → Medium
+high → High
+
+
+
+Implementation Notes
+
+(a) All dropdowns in the application must consume data from `/enums/doctor/all`.
+(b) Filter options using:
+(i) enum_type
+(ii) is_active = true
+(iii) sort_order for display sequence
+
+(c) Dynamic Enum module should allow:
+(i) Add new options
+(ii) Enable/disable options
+(iii) Maintain system vs custom values
+
+
+

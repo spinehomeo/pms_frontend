@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table"
 
 import type { FollowUpPublic } from "@/client"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { FollowupActionsMenu } from "./FollowupActionsMenu"
 
@@ -49,12 +50,12 @@ export const columns: ColumnDef<FollowUpPublic>[] = [
     cell: ({ row }) => {
       const nextDate = row.original.next_follow_up_date
       if (!nextDate) return <span className="text-muted-foreground italic">Not scheduled</span>
-      
+
       const date = new Date(nextDate)
       const today = new Date()
       const daysUntil = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
       const isOverdue = daysUntil < 0
-      
+
       return (
         <span className={cn(
           "text-sm",
@@ -65,6 +66,28 @@ export const columns: ColumnDef<FollowUpPublic>[] = [
           {isOverdue && <span className="ml-1 text-xs">(Overdue)</span>}
           {!isOverdue && daysUntil <= 7 && <span className="ml-1 text-xs">({daysUntil}d)</span>}
         </span>
+      )
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status
+      if (!status) return <span className="text-muted-foreground italic">N/A</span>
+      return (
+        <Badge
+          variant="outline"
+          className={cn(
+            "capitalize",
+            status === "completed" && "bg-green-500/10 text-green-600",
+            status === "scheduled" && "bg-blue-500/10 text-blue-600",
+            status === "pending" && "bg-yellow-500/10 text-yellow-600",
+            status === "cancelled" && "bg-red-500/10 text-red-600",
+          )}
+        >
+          {status}
+        </Badge>
       )
     },
   },

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { DoctorPreferencesService } from "@/client"
+import type { FormType } from "@/client/DoctorPreferencesService"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -49,7 +50,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-const AddCustomField = () => {
+const AddCustomField = ({ formType = "cases" }: { formType?: FormType }) => {
     const [isOpen, setIsOpen] = useState(false)
     const queryClient = useQueryClient()
     const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -72,6 +73,7 @@ const AddCustomField = () => {
                 display_name: data.display_name,
                 field_type: data.field_type,
                 is_required: data.is_required,
+                form_type: formType,
             })
         },
         onSuccess: () => {

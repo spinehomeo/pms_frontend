@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MoreHorizontal } from "lucide-react"
 import { useState } from "react"
 
-import { DoctorPreferencesService, type DoctorField } from "@/client"
+import { DoctorPreferencesService, type DoctorField, type FormType } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -17,21 +17,22 @@ import DeleteCustomField from "./DeleteCustomField"
 
 interface PreferenceActionsMenuProps {
     field: DoctorField
+    formType?: FormType
 }
 
-const PreferenceActionsMenu = ({ field }: PreferenceActionsMenuProps) => {
+const PreferenceActionsMenu = ({ field, formType = "cases" }: PreferenceActionsMenuProps) => {
     const queryClient = useQueryClient()
     const { showSuccessToast, showErrorToast } = useCustomToast()
     const [showDelete, setShowDelete] = useState(false)
 
-    // Check if this is a custom field (custom fields can be deleted)
-    const isCustomField = !["chief_complaint_patient", "duration", "physicals", "noted_complaint_doctor", "peculiar_symptoms", "causation", "lab_reports"].includes(field.field_name)
+    const isCustomField = field.is_custom === true
 
     const toggleMutation = useMutation({
         mutationFn: async () => {
             return DoctorPreferencesService.toggleField({
                 field_name: field.field_name,
                 enabled: !(field.is_enabled ?? true),
+                form_type: formType,
             })
         },
         onSuccess: () => {
@@ -51,7 +52,7 @@ const PreferenceActionsMenu = ({ field }: PreferenceActionsMenuProps) => {
     return (
         <>
             {isCustomField && (
-                <DeleteCustomField field={field} open={showDelete} onOpenChange={setShowDelete} />
+                <DeleteCustomField field={field} formType={formType} open={showDelete} onOpenChange={setShowDelete} />
             )}
 
             <DropdownMenu>

@@ -77,10 +77,13 @@ export {
 export {
   DoctorPreferencesService,
   type DoctorField,
+  type FormType,
   type InitializeResponse,
   type ToggleFieldResponse,
   type AddCustomFieldRequest,
+  type EditCustomFieldRequest,
   type AddCustomFieldResponse,
+  type EditCustomFieldResponse,
   type DeleteFieldResponse,
 } from "./DoctorPreferencesService";
 export {
@@ -110,4 +113,10 @@ export {
   type Service,
   type Testimonial,
 } from "./WebContentService";
-export { EnumsService, type DoctorEnumName } from "./EnumsService";
+export {
+  EnumsService,
+  type DoctorEnumName,
+  type EnumOption,
+  type EnumPreferenceItem,
+  type AddEnumOptionRequest,
+} from "./EnumsService";

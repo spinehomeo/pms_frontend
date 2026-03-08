@@ -19,7 +19,7 @@ import { FinanceApi } from "@/services/financeApi"
 const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IN", {
         style: "currency",
-        currency: "INR",
+        currency: "PKR",
         minimumFractionDigits: 2,
     }).format(value)
 
@@ -121,11 +121,11 @@ function CashBookDetails() {
             </Card>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                    <CardTitle>Transactions</CardTitle>
-                    <div className="flex items-center gap-2">
-                        <AddTransaction cashBookId={cashBookId} triggerLabel="Cash In" fixedNatureCode="CASH_IN" />
-                        <AddTransaction cashBookId={cashBookId} triggerLabel="Cash Out" fixedNatureCode="CASH_OUT" />
+                <CardHeader className="flex flex-row items-center gap-4">
+                    <CardTitle className="shrink-0">Transactions</CardTitle>
+                    <div className="flex flex-1 items-center justify-center gap-4">
+                        <AddTransaction cashBookId={cashBookId} triggerLabel="Cash In" fixedNatureCode="CASH_IN" triggerClassName="min-w-[200px]" />
+                        <AddTransaction cashBookId={cashBookId} triggerLabel="Cash Out" fixedNatureCode="CASH_OUT" triggerVariant="destructive" triggerClassName="min-w-[200px]" />
                     </div>
                 </CardHeader>
                 <CardContent>

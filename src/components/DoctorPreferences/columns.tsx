@@ -1,11 +1,12 @@
 import type { ColumnDef } from "@tanstack/react-table"
 
 import type { DoctorField } from "@/client/DoctorPreferencesService"
+import type { FormType } from "@/client/DoctorPreferencesService"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { PreferenceActionsMenu } from "./index"
 
-export const columns: ColumnDef<DoctorField>[] = [
+export const createColumns = (formType: FormType = "cases"): ColumnDef<DoctorField>[] => [
     {
         id: "index",
         header: "#",
@@ -18,9 +19,12 @@ export const columns: ColumnDef<DoctorField>[] = [
         accessorKey: "display_name",
         header: "Field Name",
         cell: ({ row }) => (
-            <span className="font-medium">
-                {row.original.display_name}
-            </span>
+            <div>
+                <span className="font-medium">{row.original.display_name}</span>
+                {row.original.is_custom && (
+                    <Badge variant="outline" className="ml-2 text-xs bg-purple-500/10 text-purple-600">Custom</Badge>
+                )}
+            </div>
         ),
     },
     {
@@ -72,8 +76,10 @@ export const columns: ColumnDef<DoctorField>[] = [
         header: () => <span className="sr-only">Actions</span>,
         cell: ({ row }) => (
             <div className="flex justify-end">
-                <PreferenceActionsMenu field={row.original} />
+                <PreferenceActionsMenu field={row.original} formType={formType} />
             </div>
         ),
     },
 ]
+
+export const columns = createColumns("cases")
