@@ -120,19 +120,12 @@ export interface OnsiteConsultationResponse {
 export class OnsiteConsultationService {
   public static createConsultation(
     data: OnsiteConsultationRequest,
-    idempotencyKey?: string,
   ): CancelablePromise<OnsiteConsultationResponse> {
-    const headers: Record<string, string> = {};
-    if (idempotencyKey) {
-      headers["X-Idempotency-Key"] = idempotencyKey;
-    }
-
     return __request(OpenAPI, {
       method: "POST",
       url: "/consultations/onsite",
       body: data,
       mediaType: "application/json",
-      headers,
       errors: {
         400: "Validation Error",
         403: "Forbidden",

@@ -8,6 +8,7 @@ import { z } from "zod"
 import { CasesService, EnumsService, MedicinesService, PrescriptionsService } from "@/client"
 import type { PrescriptionCreate, PrescriptionMedicineCreate } from "@/client/PrescriptionsService"
 import { Button } from "@/components/ui/button"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import {
     Dialog,
     DialogClose,
@@ -310,26 +311,23 @@ const AddPrescription = () => {
                                         <FormLabel>
                                             Case <span className="text-destructive">*</span>
                                         </FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a case" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {casesError ? (
-                                                    <div className="p-2 text-sm text-destructive">Failed to load cases</div>
-                                                ) : casesData?.data && casesData.data.length > 0 ? (
-                                                    casesData.data.map((caseItem) => (
-                                                        <SelectItem key={caseItem.id} value={caseItem.id}>
-                                                            {caseItem.patient_name || `Case ${caseItem.case_number}`} - {caseItem.chief_complaint_patient}
-                                                        </SelectItem>
-                                                    ))
-                                                ) : (
-                                                    <div className="p-2 text-sm text-muted-foreground">No cases available</div>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
+                                        <FormControl>
+                                            <SearchableSelect
+                                                options={
+                                                    casesError
+                                                        ? []
+                                                        : (casesData?.data || []).map((caseItem) => ({
+                                                            value: caseItem.id,
+                                                            label: `${caseItem.patient_name || `Case ${caseItem.case_number}`} - ${caseItem.chief_complaint_patient}`,
+                                                        }))
+                                                }
+                                                value={field.value || ""}
+                                                onValueChange={field.onChange}
+                                                placeholder="Search cases..."
+                                                searchPlaceholder="Type to search cases..."
+                                                emptyMessage="No cases found."
+                                            />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -360,30 +358,7 @@ const AddPrescription = () => {
                                 )}
                             />
 
-                            <FormField
-                                control={form.control}
-                                name="status"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Status</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select status" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {prescriptionStatusOptions.map((option) => (
-                                                    <SelectItem key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+
 
                             <div className="border-t pt-4">
                                 <div className="mb-4 flex items-center justify-between">
@@ -445,27 +420,21 @@ const AddPrescription = () => {
                                                                 <FormLabel>
                                                                     Medicine <span className="text-destructive">*</span>
                                                                 </FormLabel>
-                                                                <Select onValueChange={field.onChange} value={field.value || ""}>
-                                                                    <FormControl>
-                                                                        <SelectTrigger>
-                                                                            <SelectValue placeholder="Select medicine" />
-                                                                        </SelectTrigger>
-                                                                    </FormControl>
-                                                                    <SelectContent>
-                                                                        {medicinesError ? (
-                                                                            <div className="p-2 text-sm text-destructive">Failed to load medicines</div>
-                                                                        ) : medicinesData?.data && medicinesData.data.length > 0 ? (
-                                                                            medicinesData.data.map((medicine) => (
-                                                                                <SelectItem key={medicine.id} value={String(medicine.id)}>
-                                                                                    {medicine.name} - {medicine.potency}
-                                                                                    {medicine.potency_scale} {medicine.form}
-                                                                                </SelectItem>
-                                                                            ))
-                                                                        ) : (
-                                                                            <div className="p-2 text-sm text-muted-foreground">No medicines available</div>
-                                                                        )}
-                                                                    </SelectContent>
-                                                                </Select>
+                                                                <SearchableSelect
+                                                                    options={
+                                                                        medicinesError
+                                                                            ? []
+                                                                            : (medicinesData?.data || []).map((medicine) => ({
+                                                                                value: String(medicine.id),
+                                                                                label: `${medicine.name} - ${medicine.potency}${medicine.potency_scale || ''} ${medicine.form || ''}`.trim(),
+                                                                            }))
+                                                                    }
+                                                                    value={field.value || ""}
+                                                                    onValueChange={field.onChange}
+                                                                    placeholder="Search medicines..."
+                                                                    searchPlaceholder="Type to search medicines..."
+                                                                    emptyMessage="No medicines found."
+                                                                />
                                                                 <FormMessage />
                                                             </FormItem>
                                                         )}

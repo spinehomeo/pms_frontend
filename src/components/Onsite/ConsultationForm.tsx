@@ -5,11 +5,12 @@ import { useState } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { MedicinesService, OnsiteConsultationService } from "@/client"
+import { EnumsService, MedicinesService, OnsiteConsultationService } from "@/client"
 import type { OnsiteConsultationResponse } from "@/client/OnsiteConsultationService"
 import type { MedicinePublic } from "@/client/MedicinesService"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import {
     Card,
     CardContent,
@@ -27,17 +28,11 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { parseDoctorEnumOptions } from "@/lib/doctorEnums"
 
 // ============================================================================
 // Schema
@@ -51,6 +46,8 @@ const medicineEntrySchema = z
         new_medicine_potency: z.string().optional(),
         new_medicine_potency_scale: z.string().optional(),
         new_medicine_form: z.string().optional(),
+        new_medicine_manufacturer: z.string().optional(),
+        new_medicine_description: z.string().optional(),
         quantity_prescribed: z.string().optional(),
         frequency: z.string().optional(),
     })
@@ -69,7 +66,6 @@ const consultationBaseSchema = z.object({
     // Appointment
     consultation_type: z.string().min(1, "Consultation type is required"),
     duration_minutes: z.coerce.number().min(15).optional(),
-    reason: z.string().optional(),
     appointment_notes: z.string().optional(),
 
     // Case
@@ -94,7 +90,6 @@ const consultationBaseSchema = z.object({
     prescription_type: z.string().optional(),
     dosage: z.string().optional(),
     prescription_duration: z.string().optional(),
-    duration_days: z.coerce.number().min(1).optional(),
     instructions: z.string().optional(),
     dietary_restrictions: z.string().optional(),
     avoidance: z.string().optional(),
@@ -106,7 +101,7 @@ const consultationBaseSchema = z.object({
 
     // Follow-up fields
     next_follow_up_date: z.string().optional(),
-    interval_days: z.coerce.number().min(7).optional(),
+    interval_days: z.coerce.number().min(1).optional(),
 })
 
 const consultationSchema = consultationBaseSchema
@@ -164,15 +159,13 @@ export function ConsultationForm({
 }: ConsultationFormProps) {
     const [showPrescription, setShowPrescription] = useState(false)
     const [showFollowUp, setShowFollowUp] = useState(false)
-    const [medicineSearch, setMedicineSearch] = useState("")
     const { showSuccessToast, showErrorToast } = useCustomToast()
 
     const form = useForm<ConsultationFormData>({
         resolver: zodResolver(consultationSchema) as any,
         defaultValues: {
-            consultation_type: "",
+            consultation_type: "onsite",
             duration_minutes: 30,
-            reason: "",
             appointment_notes: "",
             chief_complaint_patient: "",
             chief_complaint_duration: "",
@@ -185,7 +178,6 @@ export function ConsultationForm({
             prescription_type: "",
             dosage: "",
             prescription_duration: "",
-            duration_days: undefined,
             instructions: "",
             dietary_restrictions: "",
             avoidance: "",
@@ -202,18 +194,54 @@ export function ConsultationForm({
         name: "medicines",
     })
 
+    // Fetch enum options from API
+    const { data: consultationTypeData } = useQuery({
+        queryKey: ["doctor-enum", "ConsultationType"],
+        queryFn: () => EnumsService.readDoctorEnum("ConsultationType"),
+    })
+    const consultationTypeOptions = parseDoctorEnumOptions(consultationTypeData)
+
+    const { data: prescriptionTypeData } = useQuery({
+        queryKey: ["doctor-enum", "PrescriptionType"],
+        queryFn: () => EnumsService.readDoctorEnum("PrescriptionType"),
+        enabled: showPrescription,
+    })
+    const prescriptionTypeOptions = parseDoctorEnumOptions(prescriptionTypeData)
+
+    const { data: repetitionData } = useQuery({
+        queryKey: ["doctor-enum", "RepetitionEnum"],
+        queryFn: () => EnumsService.readDoctorEnum("RepetitionEnum"),
+        enabled: showPrescription,
+    })
+    const repetitionOptions = parseDoctorEnumOptions(repetitionData)
+
+    const { data: scaleData } = useQuery({
+        queryKey: ["doctor-enum", "ScaleEnum"],
+        queryFn: () => EnumsService.readDoctorEnum("ScaleEnum"),
+        enabled: showPrescription,
+    })
+    const scaleOptions = parseDoctorEnumOptions(scaleData)
+
+    const { data: formEnumData } = useQuery({
+        queryKey: ["doctor-enum", "FormEnum"],
+        queryFn: () => EnumsService.readDoctorEnum("FormEnum"),
+        enabled: showPrescription,
+    })
+    const formEnumOptions = parseDoctorEnumOptions(formEnumData)
+
+    const { data: manufacturerData } = useQuery({
+        queryKey: ["doctor-enum", "ManufacturerEnum"],
+        queryFn: () => EnumsService.readDoctorEnum("ManufacturerEnum"),
+        enabled: showPrescription,
+    })
+    const manufacturerOptions = parseDoctorEnumOptions(manufacturerData)
+
     // Fetch medicines for the picker
     const { data: medicinesData } = useQuery({
         queryKey: ["medicines-all"],
         queryFn: () => MedicinesService.listAllMedicines(),
         enabled: showPrescription,
     })
-
-    const filteredMedicines = medicinesData?.data?.filter(
-        (m: MedicinePublic) =>
-            m.name.toLowerCase().includes(medicineSearch.toLowerCase()) ||
-            m.potency.toLowerCase().includes(medicineSearch.toLowerCase()),
-    )
 
     const mutation = useMutation({
         mutationFn: (data: ConsultationFormData) => {
@@ -225,7 +253,6 @@ export function ConsultationForm({
                 appointment: {
                     consultation_type: data.consultation_type,
                     duration_minutes: data.duration_minutes || undefined,
-                    reason: data.reason || undefined,
                     notes: data.appointment_notes || undefined,
                 },
                 case: {
@@ -242,10 +269,6 @@ export function ConsultationForm({
                         prescription_type: data.prescription_type!,
                         dosage: data.dosage!,
                         prescription_duration: data.prescription_duration!,
-                        duration_days:
-                            data.duration_days
-                                ? Number(data.duration_days)
-                                : undefined,
                         instructions: data.instructions || undefined,
                         dietary_restrictions:
                             data.dietary_restrictions || undefined,
@@ -265,8 +288,10 @@ export function ConsultationForm({
                                     name: m.new_medicine_name!,
                                     potency: m.new_medicine_potency!,
                                     potency_scale:
-                                        m.new_medicine_potency_scale || "C",
-                                    form: m.new_medicine_form || "Globules",
+                                        m.new_medicine_potency_scale || undefined,
+                                    form: m.new_medicine_form || undefined,
+                                    manufacturer: m.new_medicine_manufacturer || undefined,
+                                    description: m.new_medicine_description || undefined,
                                 },
                                 quantity_prescribed:
                                     m.quantity_prescribed || undefined,
@@ -289,7 +314,6 @@ export function ConsultationForm({
 
             return OnsiteConsultationService.createConsultation(
                 request,
-                crypto.randomUUID(),
             )
         },
         onSuccess: (result) => {
@@ -355,34 +379,18 @@ export function ConsultationForm({
                                         <FormLabel>
                                             Type <span className="text-destructive">*</span>
                                         </FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select type" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="first">First Visit</SelectItem>
-                                                <SelectItem value="follow_up">Follow-up</SelectItem>
-                                                <SelectItem value="emergency">Emergency</SelectItem>
-                                                <SelectItem value="onsite">Onsite</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="reason"
-                                render={({ field }) => (
-                                    <FormItem className="sm:col-span-2 lg:col-span-1">
-                                        <FormLabel>Reason</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Reason for visit" {...field} />
+                                            <SearchableSelect
+                                                options={consultationTypeOptions.map((o) => ({
+                                                    value: o.value,
+                                                    label: o.label,
+                                                }))}
+                                                value={field.value || ""}
+                                                onValueChange={field.onChange}
+                                                placeholder="Select type"
+                                                searchPlaceholder="Search types..."
+                                                emptyMessage="No types found."
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -570,26 +578,19 @@ export function ConsultationForm({
                                                 Type{" "}
                                                 <span className="text-destructive">*</span>
                                             </FormLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select type" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="constitutional">
-                                                        Constitutional
-                                                    </SelectItem>
-                                                    <SelectItem value="acute">Acute</SelectItem>
-                                                    <SelectItem value="chronic">Chronic</SelectItem>
-                                                    <SelectItem value="palliative">
-                                                        Palliative
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <FormControl>
+                                                <SearchableSelect
+                                                    options={prescriptionTypeOptions.map((o) => ({
+                                                        value: o.value,
+                                                        label: o.label,
+                                                    }))}
+                                                    value={field.value || ""}
+                                                    onValueChange={field.onChange}
+                                                    placeholder="Select type"
+                                                    searchPlaceholder="Search types..."
+                                                    emptyMessage="No types found."
+                                                />
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -625,24 +626,6 @@ export function ConsultationForm({
                                             <FormControl>
                                                 <Input
                                                     placeholder="e.g. 14 days"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="duration_days"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Duration (days)</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    min={1}
-                                                    placeholder="14"
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -743,9 +726,11 @@ export function ConsultationForm({
                                         key={field.id}
                                         index={index}
                                         form={form}
-                                        medicines={filteredMedicines || []}
-                                        medicineSearch={medicineSearch}
-                                        onMedicineSearchChange={setMedicineSearch}
+                                        medicines={medicinesData?.data || []}
+                                        repetitionOptions={repetitionOptions}
+                                        scaleOptions={scaleOptions}
+                                        formEnumOptions={formEnumOptions}
+                                        manufacturerOptions={manufacturerOptions}
                                         onRemove={() => remove(index)}
                                     />
                                 ))}
@@ -814,7 +799,7 @@ export function ConsultationForm({
                                                 <FormControl>
                                                     <Input
                                                         type="number"
-                                                        min={7}
+                                                        min={1}
                                                         placeholder="30"
                                                         {...field}
                                                     />
@@ -856,18 +841,27 @@ function MedicineEntryCard({
     index,
     form,
     medicines,
-    medicineSearch,
-    onMedicineSearchChange,
+    repetitionOptions,
+    scaleOptions,
+    formEnumOptions,
+    manufacturerOptions,
     onRemove,
 }: {
     index: number
     form: ReturnType<typeof useForm<ConsultationFormData>>
     medicines: MedicinePublic[]
-    medicineSearch: string
-    onMedicineSearchChange: (s: string) => void
+    repetitionOptions: { value: string; label: string }[]
+    scaleOptions: { value: string; label: string }[]
+    formEnumOptions: { value: string; label: string }[]
+    manufacturerOptions: { value: string; label: string }[]
     onRemove: () => void
 }) {
     const mode = form.watch(`medicines.${index}.mode`)
+
+    const medicineOptions = medicines.map((med) => ({
+        value: String(med.id),
+        label: `${med.name} — ${med.potency}${med.potency_scale || ""} (${med.form || ""})`.trim(),
+    }))
 
     return (
         <div className="rounded-lg border p-4 space-y-3">
@@ -904,43 +898,25 @@ function MedicineEntryCard({
             </div>
 
             {mode === "existing" ? (
-                <div className="space-y-2">
-                    <Input
-                        placeholder="Search medicines..."
-                        value={medicineSearch}
-                        onChange={(e) => onMedicineSearchChange(e.target.value)}
-                    />
-                    <FormField
-                        control={form.control}
-                        name={`medicines.${index}.medicine_id`}
-                        render={({ field }) => (
-                            <FormItem>
-                                <Select
+                <FormField
+                    control={form.control}
+                    name={`medicines.${index}.medicine_id`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <SearchableSelect
+                                    options={medicineOptions}
+                                    value={field.value || ""}
                                     onValueChange={field.onChange}
-                                    value={field.value}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select medicine" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {medicines.slice(0, 50).map((med) => (
-                                            <SelectItem
-                                                key={med.id}
-                                                value={String(med.id)}
-                                            >
-                                                {med.name} — {med.potency}
-                                                {med.potency_scale} ({med.form})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                                    placeholder="Search medicines..."
+                                    searchPlaceholder="Type to search medicines..."
+                                    emptyMessage="No medicines found."
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
             ) : (
                 <div className="grid grid-cols-2 gap-3">
                     <FormField
@@ -975,21 +951,19 @@ function MedicineEntryCard({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Scale</FormLabel>
-                                <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value || "C"}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="C">C</SelectItem>
-                                        <SelectItem value="X">X</SelectItem>
-                                        <SelectItem value="Q">Q</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <FormControl>
+                                    <SearchableSelect
+                                        options={scaleOptions.map((o) => ({
+                                            value: o.value,
+                                            label: o.label,
+                                        }))}
+                                        value={field.value || ""}
+                                        onValueChange={field.onChange}
+                                        placeholder="Select scale"
+                                        searchPlaceholder="Search scales..."
+                                        emptyMessage="No scales found."
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -1000,24 +974,55 @@ function MedicineEntryCard({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Form</FormLabel>
-                                <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value || "Globules"}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="Globules">Globules</SelectItem>
-                                        <SelectItem value="Dilutions">Dilutions</SelectItem>
-                                        <SelectItem value="Diskette">Diskette</SelectItem>
-                                        <SelectItem value="SOM">SOM</SelectItem>
-                                        <SelectItem value="Bio Chemic">Bio Chemic</SelectItem>
-                                        <SelectItem value="Homoeo Tabs">Homoeo Tabs</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <FormControl>
+                                    <SearchableSelect
+                                        options={formEnumOptions.map((o) => ({
+                                            value: o.value,
+                                            label: o.label,
+                                        }))}
+                                        value={field.value || ""}
+                                        onValueChange={field.onChange}
+                                        placeholder="Select form"
+                                        searchPlaceholder="Search forms..."
+                                        emptyMessage="No forms found."
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name={`medicines.${index}.new_medicine_manufacturer`}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Manufacturer</FormLabel>
+                                <FormControl>
+                                    <SearchableSelect
+                                        options={manufacturerOptions.map((o) => ({
+                                            value: o.value,
+                                            label: o.label,
+                                        }))}
+                                        value={field.value || ""}
+                                        onValueChange={field.onChange}
+                                        placeholder="Select manufacturer"
+                                        searchPlaceholder="Search manufacturers..."
+                                        emptyMessage="No manufacturers found."
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name={`medicines.${index}.new_medicine_description`}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Description" {...field} />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -1047,7 +1052,17 @@ function MedicineEntryCard({
                         <FormItem>
                             <FormLabel>Frequency</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. TDS, BD" {...field} />
+                                <SearchableSelect
+                                    options={repetitionOptions.map((o) => ({
+                                        value: o.value,
+                                        label: o.label,
+                                    }))}
+                                    value={field.value || ""}
+                                    onValueChange={field.onChange}
+                                    placeholder="Select frequency"
+                                    searchPlaceholder="Search frequencies..."
+                                    emptyMessage="No frequencies found."
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

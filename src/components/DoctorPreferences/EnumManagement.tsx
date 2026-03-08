@@ -72,18 +72,18 @@ const ENUM_TYPES = [
 ] as const
 
 const addOptionSchema = z.object({
-    value: z.string().min(1, "Value is required"),
     label: z.string().min(1, "Label is required"),
-    sort_order: z.string().optional(),
 })
 
 type AddOptionFormData = z.infer<typeof addOptionSchema>
 
 function AddEnumOptionDialog({
     enumType,
+    existingCount,
     onSuccess,
 }: {
     enumType: string
+    existingCount: number
     onSuccess: () => void
 }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -91,15 +91,15 @@ function AddEnumOptionDialog({
 
     const form = useForm<AddOptionFormData>({
         resolver: zodResolver(addOptionSchema),
-        defaultValues: { value: "", label: "", sort_order: undefined },
+        defaultValues: { label: "" },
     })
 
     const mutation = useMutation({
         mutationFn: (data: AddOptionFormData) =>
             EnumsService.addCustomEnumOption(enumType, {
-                value: data.value,
+                value: data.label.toLowerCase().replace(/\s+/g, "_"),
                 label: data.label,
-                sort_order: data.sort_order ? Number(data.sort_order) : undefined,
+                sort_order: existingCount + 1,
             }),
         onSuccess: () => {
             showSuccessToast("Option added successfully")
@@ -130,38 +130,12 @@ function AddEnumOptionDialog({
                         <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
                             <FormField
                                 control={form.control}
-                                name="value"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Value</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g., rescheduled" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
                                 name="label"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Label</FormLabel>
                                         <FormControl>
                                             <Input placeholder="e.g., Rescheduled" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="sort_order"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Sort Order (optional)</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" placeholder="e.g., 10" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -286,14 +260,14 @@ function EnumGroupCard({ enumTypeKey, enumLabel }: { enumTypeKey: string; enumLa
                                 ))}
                             </div>
                             <div className="flex justify-end pt-2">
-                                <AddEnumOptionDialog enumType={enumTypeKey} onSuccess={handleRefresh} />
+                                <AddEnumOptionDialog enumType={enumTypeKey} existingCount={preferences.length} onSuccess={handleRefresh} />
                             </div>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center py-6 text-center">
                             <p className="text-sm text-muted-foreground">No options found for this enum type</p>
                             <div className="mt-3">
-                                <AddEnumOptionDialog enumType={enumTypeKey} onSuccess={handleRefresh} />
+                                <AddEnumOptionDialog enumType={enumTypeKey} existingCount={0} onSuccess={handleRefresh} />
                             </div>
                         </div>
                     )}
