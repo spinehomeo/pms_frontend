@@ -1,4 +1,19 @@
-import { Home, Users, UserCircle, Calendar, Pill, FileText, RotateCcw, FolderOpen, Clock, Settings, Feather, Wallet, ClipboardList } from "lucide-react"
+import {
+  Calendar,
+  ClipboardList,
+  Clock,
+  Feather,
+  FileText,
+  FolderOpen,
+  Home,
+  Pill,
+  RotateCcw,
+  Settings,
+  UserCheck,
+  UserCircle,
+  Users,
+  Wallet,
+} from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -12,19 +27,20 @@ import useAuth from "@/hooks/useAuth"
 import { type Item, Main } from "./Main"
 import { User } from "./User"
 
-const baseItems: Item[] = [
-  { icon: Home, title: "Dashboard", path: "/" },
-]
+const baseItems: Item[] = [{ icon: Home, title: "Dashboard", path: "/" }]
 
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
-  let items = [...baseItems]
+  const items = [...baseItems]
 
   // Add doctor-specific items (only show for doctors, not superusers unless they are also doctors)
-  const isDoctor = (currentUser as any)?.role === "doctor" || (currentUser as any)?.is_doctor === true
+  const isDoctor =
+    (currentUser as any)?.role === "doctor" ||
+    (currentUser as any)?.is_doctor === true
   if (isDoctor) {
     items.push(
+      { icon: UserCheck, title: "Onsite", path: "/onsite" },
       { icon: UserCircle, title: "Patient", path: "/patients" },
       { icon: Calendar, title: "Appointments", path: "/appointments" },
       { icon: FolderOpen, title: "Cases", path: "/cases" },
@@ -35,7 +51,7 @@ export function AppSidebar() {
       { icon: Pill, title: "Remedies", path: "/medicines" },
       { icon: Feather, title: "Content", path: "/web-content" },
       { icon: Wallet, title: "Finance", path: "/finance" },
-      { icon: Settings, title: "Core Settings", path: "/core-settings" }
+      { icon: Settings, title: "Core Settings", path: "/core-settings" },
     )
   }
 

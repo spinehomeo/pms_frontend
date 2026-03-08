@@ -19,6 +19,7 @@ import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutReportsRouteImport } from './routes/_layout/reports'
 import { Route as LayoutPrescriptionsRouteImport } from './routes/_layout/prescriptions'
 import { Route as LayoutPatientsRouteImport } from './routes/_layout/patients'
+import { Route as LayoutOnsiteRouteImport } from './routes/_layout/onsite'
 import { Route as LayoutMedicinesRouteImport } from './routes/_layout/medicines'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutFollowupsRouteImport } from './routes/_layout/followups'
@@ -83,6 +84,11 @@ const LayoutPrescriptionsRoute = LayoutPrescriptionsRouteImport.update({
 const LayoutPatientsRoute = LayoutPatientsRouteImport.update({
   id: '/patients',
   path: '/patients',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutOnsiteRoute = LayoutOnsiteRouteImport.update({
+  id: '/onsite',
+  path: '/onsite',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutMedicinesRoute = LayoutMedicinesRouteImport.update({
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
   '/medicines': typeof LayoutMedicinesRoute
+  '/onsite': typeof LayoutOnsiteRoute
   '/patients': typeof LayoutPatientsRoute
   '/prescriptions': typeof LayoutPrescriptionsRoute
   '/reports': typeof LayoutReportsRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/followups': typeof LayoutFollowupsRoute
   '/items': typeof LayoutItemsRoute
   '/medicines': typeof LayoutMedicinesRoute
+  '/onsite': typeof LayoutOnsiteRoute
   '/patients': typeof LayoutPatientsRoute
   '/prescriptions': typeof LayoutPrescriptionsRoute
   '/reports': typeof LayoutReportsRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/_layout/followups': typeof LayoutFollowupsRoute
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/medicines': typeof LayoutMedicinesRoute
+  '/_layout/onsite': typeof LayoutOnsiteRoute
   '/_layout/patients': typeof LayoutPatientsRoute
   '/_layout/prescriptions': typeof LayoutPrescriptionsRoute
   '/_layout/reports': typeof LayoutReportsRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/followups'
     | '/items'
     | '/medicines'
+    | '/onsite'
     | '/patients'
     | '/prescriptions'
     | '/reports'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/followups'
     | '/items'
     | '/medicines'
+    | '/onsite'
     | '/patients'
     | '/prescriptions'
     | '/reports'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/_layout/followups'
     | '/_layout/items'
     | '/_layout/medicines'
+    | '/_layout/onsite'
     | '/_layout/patients'
     | '/_layout/prescriptions'
     | '/_layout/reports'
@@ -417,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/patients'
       fullPath: '/patients'
       preLoaderRoute: typeof LayoutPatientsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/onsite': {
+      id: '/_layout/onsite'
+      path: '/onsite'
+      fullPath: '/onsite'
+      preLoaderRoute: typeof LayoutOnsiteRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/medicines': {
@@ -556,6 +575,7 @@ interface LayoutRouteChildren {
   LayoutFollowupsRoute: typeof LayoutFollowupsRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutMedicinesRoute: typeof LayoutMedicinesRoute
+  LayoutOnsiteRoute: typeof LayoutOnsiteRoute
   LayoutPatientsRoute: typeof LayoutPatientsRoute
   LayoutPrescriptionsRoute: typeof LayoutPrescriptionsRoute
   LayoutReportsRoute: typeof LayoutReportsRoute
@@ -579,6 +599,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutFollowupsRoute: LayoutFollowupsRoute,
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutMedicinesRoute: LayoutMedicinesRoute,
+  LayoutOnsiteRoute: LayoutOnsiteRoute,
   LayoutPatientsRoute: LayoutPatientsRoute,
   LayoutPrescriptionsRoute: LayoutPrescriptionsRoute,
   LayoutReportsRoute: LayoutReportsRoute,

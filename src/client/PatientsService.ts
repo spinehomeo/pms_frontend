@@ -88,6 +88,49 @@ export interface PatientsPublic {
   count: number;
 }
 
+// Onsite patient types
+export interface OnsiteSearchData {
+  phone?: string;
+  full_name?: string;
+}
+
+export interface OnsiteSearchResult {
+  id: string;
+  full_name: string;
+  phone: string;
+  gender: string;
+  cnic: string;
+  is_match_by_phone: boolean;
+  is_match_by_name: boolean;
+  match_score: number;
+}
+
+export interface OnsiteQuickRegisterData {
+  full_name: string;
+  phone: string;
+  gender?: string;
+  city?: string;
+  email?: string;
+}
+
+export interface OnsitePatientDetails {
+  id: string;
+  full_name: string;
+  phone: string;
+  gender: string;
+  cnic: string;
+  is_temp_cnic: boolean;
+  date_of_birth?: string | null;
+  email?: string | null;
+  city?: string | null;
+  medical_history?: string | null;
+  drug_allergies?: string | null;
+  family_history?: string | null;
+  current_medications?: string | null;
+  created_date: string;
+  is_active: boolean;
+}
+
 export class PatientsService {
   public static readPatients(
     data: PatientsReadPatientsData = {},
@@ -159,6 +202,53 @@ export class PatientsService {
     return __request(OpenAPI, {
       method: "DELETE",
       url: `/patients/${data.patientId}`,
+      errors: {
+        404: "Patient not found",
+        403: "Forbidden",
+      },
+    });
+  }
+
+  // Onsite patient methods
+  public static onsiteSearch(
+    data: OnsiteSearchData,
+  ): CancelablePromise<OnsiteSearchResult[]> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/patients/onsite/search",
+      query: {
+        phone: data.phone,
+        full_name: data.full_name,
+      },
+      errors: {
+        422: "Validation Error",
+        403: "Forbidden",
+      },
+    });
+  }
+
+  public static onsiteQuickRegister(
+    data: OnsiteQuickRegisterData,
+  ): CancelablePromise<OnsitePatientDetails> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/patients/onsite/quick-register",
+      body: data,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+        409: "Patient already exists",
+        403: "Forbidden",
+      },
+    });
+  }
+
+  public static onsiteGetDetails(data: {
+    patientId: string;
+  }): CancelablePromise<OnsitePatientDetails> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: `/patients/onsite/${data.patientId}`,
       errors: {
         404: "Patient not found",
         403: "Forbidden",

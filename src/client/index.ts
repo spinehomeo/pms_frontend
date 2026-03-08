@@ -11,7 +11,23 @@ export {
   type PatientsPublic,
   type PatientCreate,
   type PatientUpdate,
+  type OnsiteSearchData,
+  type OnsiteSearchResult,
+  type OnsiteQuickRegisterData,
+  type OnsitePatientDetails,
 } from "./PatientsService";
+export {
+  OnsiteConsultationService,
+  type OnsiteConsultationRequest,
+  type OnsiteConsultationResponse,
+  type ConsultationPatientData,
+  type ConsultationAppointmentData,
+  type ConsultationCaseData,
+  type ConsultationPrescriptionData,
+  type ConsultationFollowUpData,
+  type ConsultationMedicineEntry,
+  type ConsultationNewMedicine,
+} from "./OnsiteConsultationService";
 export {
   AppointmentsService,
   type AppointmentPublic,
