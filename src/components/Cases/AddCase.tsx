@@ -45,13 +45,8 @@ const formSchema = z.object({
   patient_id: z.string().min(1, { message: "Patient is required" }),
   appointment_id: z.string().optional(),
   chief_complaint_patient: z.string().min(1, { message: "Chief complaint is required" }),
-  duration: z.string().min(1, { message: "Duration is required" }),
-  physicals: z.string().optional(),
-  noted_complaint_doctor: z.string().optional(),
-  peculiar_symptoms: z.string().optional(),
-  causation: z.string().optional(),
-  lab_reports: z.string().optional(),
-}).catchall(z.string()) // Allow custom fields
+  chief_complaint_duration: z.string().min(1, { message: "Duration is required" }),
+}).catchall(z.string().optional()) // Allow optional custom fields
 
 type FormData = z.infer<typeof formSchema>
 
@@ -152,12 +147,7 @@ const AddCase = () => {
       patient_id: "",
       appointment_id: "",
       chief_complaint_patient: "",
-      duration: "",
-      physicals: "",
-      noted_complaint_doctor: "",
-      peculiar_symptoms: "",
-      causation: "",
-      lab_reports: "",
+      chief_complaint_duration: "",
     },
   })
 
@@ -197,12 +187,10 @@ const AddCase = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    // Extract custom fields (any field not in the standard schema)
-    const standardFields = ['patient_id', 'appointment_id', 'chief_complaint_patient', 'duration', 'physicals', 'noted_complaint_doctor', 'peculiar_symptoms', 'causation', 'lab_reports']
     const customFields: Record<string, string> = {}
 
     Object.entries(data).forEach(([key, value]) => {
-      if (!standardFields.includes(key) && value) {
+      if (key !== "patient_id" && key !== "appointment_id" && key !== "chief_complaint_patient" && key !== "chief_complaint_duration" && value) {
         customFields[key] = value as string
       }
     })
@@ -211,12 +199,7 @@ const AddCase = () => {
       patient_id: data.patient_id,
       appointment_id: data.appointment_id || undefined,
       chief_complaint_patient: data.chief_complaint_patient,
-      chief_complaint_duration: data.duration,
-      physicals: data.physicals || undefined,
-      noted_complaint_doctor: data.noted_complaint_doctor || undefined,
-      peculiar_symptoms: data.peculiar_symptoms || undefined,
-      causation: data.causation || undefined,
-      lab_reports: data.lab_reports || undefined,
+      chief_complaint_duration: data.chief_complaint_duration,
       custom_fields: Object.keys(customFields).length > 0 ? customFields : undefined,
     }
     mutation.mutate(caseData)
@@ -364,7 +347,7 @@ const AddCase = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Chief Complaint (Patient's Words) <span className="text-destructive">*</span>
+                          Chief Complaint <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormControl>
                           <Textarea
@@ -380,11 +363,11 @@ const AddCase = () => {
 
                   <FormField
                     control={form.control}
-                    name="duration"
+                    name="chief_complaint_duration"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Chief Complaint Duration <span className="text-destructive">*</span>
+                          Complaint Duration <span className="text-destructive">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -398,102 +381,9 @@ const AddCase = () => {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="physicals"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Physical Examination</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Physical examination findings (e.g., BP 120/80)"
-                          {...field}
-                          rows={2}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="noted_complaint_doctor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Noted Complaint (Doctor's Assessment)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Doctor's professional assessment"
-                          {...field}
-                          rows={2}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="peculiar_symptoms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Peculiar Symptoms</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Unique or unusual symptoms"
-                          {...field}
-                          rows={2}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="causation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Causation</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Possible causes or triggers"
-                          {...field}
-                          rows={2}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="lab_reports"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lab Reports</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Laboratory test results"
-                          {...field}
-                          rows={2}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 {/* Dynamic Custom Fields */}
                 {preferencesData && preferencesData.length > 0 && (
                   <>
-                    <div className="col-span-full mt-4 border-t pt-4">
-                      <h3 className="text-sm font-medium mb-3">Custom Fields</h3>
-                    </div>
                     {preferencesData.map((customField: DoctorField) => (
                       <FormField
                         key={customField.field_name}
