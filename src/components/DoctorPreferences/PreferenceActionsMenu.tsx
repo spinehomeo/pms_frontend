@@ -66,28 +66,28 @@ const PreferenceActionsMenu = ({ field, formType = "cases" }: PreferenceActionsM
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {!isMandatoryField && (
+                    {isCustomField ? (
                         <DropdownMenuItem
-                            onClick={() => toggleMutation.mutate()}
-                            disabled={toggleMutation.isPending}
+                            onClick={() => setShowDelete(true)}
+                            className="text-destructive"
                         >
-                            {field.is_enabled ?? true ? "Disable" : "Enable"}
+                            Delete
                         </DropdownMenuItem>
-                    )}
-                    {isMandatoryField && (
-                        <DropdownMenuItem disabled className="text-muted-foreground">
-                            Always Required (Cannot Disable)
-                        </DropdownMenuItem>
-                    )}
-                    {isCustomField && (
+                    ) : (
                         <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() => setShowDelete(true)}
-                                className="text-destructive"
-                            >
-                                Delete
-                            </DropdownMenuItem>
+                            {!isMandatoryField && (
+                                <DropdownMenuItem
+                                    onClick={() => toggleMutation.mutate()}
+                                    disabled={toggleMutation.isPending}
+                                >
+                                    {field.is_enabled ?? true ? "Disable" : "Enable"}
+                                </DropdownMenuItem>
+                            )}
+                            {isMandatoryField && (
+                                <DropdownMenuItem disabled className="text-muted-foreground">
+                                    Always Required (Cannot Disable)
+                                </DropdownMenuItem>
+                            )}
                         </>
                     )}
                 </DropdownMenuContent>
