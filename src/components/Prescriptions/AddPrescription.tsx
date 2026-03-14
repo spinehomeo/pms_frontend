@@ -66,7 +66,7 @@ const formSchema = z.object({
     case_id: z.string().min(1, { message: "Case is required" }),
     prescription_type: z.string().min(1, "Prescription type is required").optional(),
     dosage: z.string().optional(),
-    prescription_duration: z.string().optional(),
+    prescription_duration: z.string().min(1, "Prescription duration is required"),
     instructions: z.string().optional(),
     follow_up_advice: z.string().optional(),
     follow_up_date: z.string().optional(),
@@ -358,7 +358,21 @@ const AddPrescription = () => {
                                 )}
                             />
 
-
+                            <FormField
+                                control={form.control}
+                                name="prescription_duration"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            Prescription Duration <span className="text-destructive">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g., 7 days, 2 weeks" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             <div className="border-t pt-4">
                                 <div className="mb-4 flex items-center justify-between">

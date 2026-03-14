@@ -88,7 +88,6 @@ const consultationBaseSchema = z.object({
 
     // Prescription fields
     prescription_type: z.string().optional(),
-    dosage: z.string().optional(),
     prescription_duration: z.string().optional(),
     instructions: z.string().optional(),
     dietary_restrictions: z.string().optional(),
@@ -110,7 +109,6 @@ const consultationSchema = consultationBaseSchema
             if (data.include_prescription) {
                 return (
                     !!data.prescription_type &&
-                    !!data.dosage &&
                     !!data.prescription_duration &&
                     data.medicines &&
                     data.medicines.length > 0
@@ -176,7 +174,6 @@ export function ConsultationForm({
             lab_reports: "",
             include_prescription: false,
             prescription_type: "",
-            dosage: "",
             prescription_duration: "",
             instructions: "",
             dietary_restrictions: "",
@@ -267,7 +264,6 @@ export function ConsultationForm({
                 prescription: data.include_prescription
                     ? {
                         prescription_type: data.prescription_type!,
-                        dosage: data.dosage!,
                         prescription_duration: data.prescription_duration!,
                         instructions: data.instructions || undefined,
                         dietary_restrictions:
@@ -436,7 +432,7 @@ export function ConsultationForm({
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            Duration{" "}
+                                            Complaint Duration{" "}
                                             <span className="text-destructive">*</span>
                                         </FormLabel>
                                         <FormControl>
@@ -551,9 +547,6 @@ export function ConsultationForm({
                             <div>
                                 <CardTitle className="text-base">
                                     Prescription
-                                    <Badge variant="secondary" className="ml-2">
-                                        Optional
-                                    </Badge>
                                 </CardTitle>
                                 <CardDescription>
                                     Add medicines and dosage instructions
@@ -597,30 +590,11 @@ export function ConsultationForm({
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="dosage"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                Dosage{" "}
-                                                <span className="text-destructive">*</span>
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="e.g. 3 times daily"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
                                     name="prescription_duration"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>
-                                                Duration{" "}
+                                                Prescription Duration{" "}
                                                 <span className="text-destructive">*</span>
                                             </FormLabel>
                                             <FormControl>
@@ -756,9 +730,6 @@ export function ConsultationForm({
                                 <div>
                                     <CardTitle className="text-base">
                                         Follow-up
-                                        <Badge variant="secondary" className="ml-2">
-                                            Optional
-                                        </Badge>
                                     </CardTitle>
                                     <CardDescription>
                                         Schedule the patient's next visit
