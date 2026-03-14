@@ -26,6 +26,9 @@ const PreferenceActionsMenu = ({ field, formType = "cases" }: PreferenceActionsM
     const [showDelete, setShowDelete] = useState(false)
 
     const isCustomField = field.is_custom === true
+    const isMandatoryField = 
+        field.field_name === "chief_complaint_patient" || 
+        field.field_name === "chief_complaint_duration"
 
     const toggleMutation = useMutation({
         mutationFn: async () => {
@@ -63,12 +66,19 @@ const PreferenceActionsMenu = ({ field, formType = "cases" }: PreferenceActionsM
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                        onClick={() => toggleMutation.mutate()}
-                        disabled={toggleMutation.isPending}
-                    >
-                        {field.is_enabled ?? true ? "Disable" : "Enable"}
-                    </DropdownMenuItem>
+                    {!isMandatoryField && (
+                        <DropdownMenuItem
+                            onClick={() => toggleMutation.mutate()}
+                            disabled={toggleMutation.isPending}
+                        >
+                            {field.is_enabled ?? true ? "Disable" : "Enable"}
+                        </DropdownMenuItem>
+                    )}
+                    {isMandatoryField && (
+                        <DropdownMenuItem disabled className="text-muted-foreground">
+                            Always Required (Cannot Disable)
+                        </DropdownMenuItem>
+                    )}
                     {isCustomField && (
                         <>
                             <DropdownMenuSeparator />

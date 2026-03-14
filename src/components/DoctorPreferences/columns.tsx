@@ -56,6 +56,22 @@ export const createColumns = (formType: FormType = "cases"): ColumnDef<DoctorFie
         accessorKey: "is_enabled",
         header: "Status",
         cell: ({ row }) => {
+            // Check if this is a mandatory backend field
+            const isMandatoryField = 
+                row.original.field_name === "chief_complaint_patient" || 
+                row.original.field_name === "chief_complaint_duration"
+            
+            if (isMandatoryField) {
+                return (
+                    <Badge
+                        variant="default"
+                        className="bg-orange-500/10 text-orange-600"
+                    >
+                        Always Required
+                    </Badge>
+                )
+            }
+            
             const isEnabled = row.original.is_enabled ?? true
             return (
                 <Badge
