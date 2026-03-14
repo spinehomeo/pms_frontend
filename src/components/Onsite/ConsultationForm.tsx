@@ -5,9 +5,10 @@ import { useState } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { EnumsService, MedicinesService, OnsiteConsultationService } from "@/client"
+import { EnumsService, MedicinesService, OnsiteConsultationService, DoctorPreferencesService } from "@/client"
 import type { OnsiteConsultationResponse } from "@/client/OnsiteConsultationService"
 import type { MedicinePublic } from "@/client/MedicinesService"
+import type { DoctorField } from "@/client/DoctorPreferencesService"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SearchableSelect } from "@/components/ui/searchable-select"
@@ -77,11 +78,6 @@ const consultationBaseSchema = z.object({
         .string()
         .min(1, "Complaint duration is required")
         .max(100),
-    physicals: z.string().optional(),
-    noted_complaint_doctor: z.string().max(500).optional(),
-    peculiar_symptoms: z.string().optional(),
-    causation: z.string().optional(),
-    lab_reports: z.string().optional(),
 
     // Prescription toggle
     include_prescription: z.boolean(),
@@ -101,7 +97,7 @@ const consultationBaseSchema = z.object({
     // Follow-up fields
     next_follow_up_date: z.string().optional(),
     interval_days: z.coerce.number().min(1).optional(),
-})
+}).catchall(z.string().optional()) // Allow optional custom fields from doctor preferences
 
 const consultationSchema = consultationBaseSchema
     .refine(
@@ -167,11 +163,6 @@ export function ConsultationForm({
             appointment_notes: "",
             chief_complaint_patient: "",
             chief_complaint_duration: "",
-            physicals: "",
-            noted_complaint_doctor: "",
-            peculiar_symptoms: "",
-            causation: "",
-            lab_reports: "",
             include_prescription: false,
             prescription_type: "",
             prescription_duration: "",
@@ -184,6 +175,21 @@ export function ConsultationForm({
             next_follow_up_date: "",
             interval_days: undefined,
         },
+    })
+
+    // Fetch doctor preferences for case and follow-up custom fields
+    const { data: casePreferencesData } = useQuery({
+        queryKey: ["doctor-preferences", "cases"],
+        queryFn: () => DoctorPreferencesService.getFields("cases"),
+        retry: false,
+        throwOnError: false,
+    })
+
+    const { data: followupPreferencesData } = useQuery({
+        queryKey: ["doctor-preferences", "followups"],
+        queryFn: () => DoctorPreferencesService.getFields("followups"),
+        retry: false,
+        throwOnError: false,
     })
 
     const { fields, append, remove } = useFieldArray({
@@ -242,6 +248,35 @@ export function ConsultationForm({
 
     const mutation = useMutation({
         mutationFn: (data: ConsultationFormData) => {
+            // Collect custom fields for case
+            const standardCaseFields = [
+                "chief_complaint_patient", "chief_complaint_duration"
+            ]
+            const caseCustomFields: Record<string, string> = {}
+            Object.entries(data).forEach(([key, value]) => {
+                if (!standardCaseFields.includes(key) && !key.startsWith("include_") && 
+                    !key.startsWith("prescription_") && !key.startsWith("consultation_") &&
+                    !key.startsWith("appointment_") && !key.startsWith("duration_") &&
+                    !key.startsWith("next_follow_up_") && !key.startsWith("interval_") &&
+                    key !== "medicines" && value) {
+                    caseCustomFields[key] = value as string
+                }
+            })
+
+            // Collect custom fields for follow-up
+            const standardFollowupFields = ["next_follow_up_date", "interval_days"]
+            const followupCustomFields: Record<string, string> = {}
+            if (data.include_follow_up) {
+                Object.entries(data).forEach(([key, value]) => {
+                    if (!standardFollowupFields.includes(key) && !standardCaseFields.includes(key) &&
+                        !key.startsWith("include_") && !key.startsWith("prescription_") && 
+                        !key.startsWith("consultation_") && !key.startsWith("appointment_") &&
+                        !key.startsWith("duration_") && key !== "medicines" && value) {
+                        followupCustomFields[key] = value as string
+                    }
+                })
+            }
+
             const request = {
                 patient: {
                     full_name: patientName,
@@ -255,11 +290,7 @@ export function ConsultationForm({
                 case: {
                     chief_complaint_patient: data.chief_complaint_patient,
                     chief_complaint_duration: data.chief_complaint_duration,
-                    physicals: data.physicals || undefined,
-                    noted_complaint_doctor: data.noted_complaint_doctor || undefined,
-                    peculiar_symptoms: data.peculiar_symptoms || undefined,
-                    causation: data.causation || undefined,
-                    lab_reports: data.lab_reports || undefined,
+                    custom_fields: Object.keys(caseCustomFields).length > 0 ? caseCustomFields : undefined,
                 },
                 prescription: data.include_prescription
                     ? {
@@ -304,6 +335,7 @@ export function ConsultationForm({
                                 data.interval_days
                                     ? Number(data.interval_days)
                                     : undefined,
+                            custom_fields: Object.keys(followupCustomFields).length > 0 ? followupCustomFields : undefined,
                         }
                         : undefined,
             }
@@ -405,12 +437,12 @@ export function ConsultationForm({
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="chief_complaint_patient"
                                 render={({ field }) => (
-                                    <FormItem className="sm:col-span-2">
+                                    <FormItem className="col-span-2">
                                         <FormLabel>
                                             Chief Complaint{" "}
                                             <span className="text-destructive">*</span>
@@ -420,6 +452,7 @@ export function ConsultationForm({
                                                 placeholder="Patient's own words about their complaint..."
                                                 className="min-h-20"
                                                 {...field}
+                                                rows={2}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -445,89 +478,44 @@ export function ConsultationForm({
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="physicals"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Physical Examination</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="BP, Pulse, etc."
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="noted_complaint_doctor"
-                                render={({ field }) => (
-                                    <FormItem className="sm:col-span-2">
-                                        <FormLabel>Doctor's Assessment</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder="Doctor's observation & assessment..."
-                                                className="min-h-15"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="peculiar_symptoms"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Peculiar Symptoms</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Unusual symptoms..."
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="causation"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Causation</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Possible cause..."
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="lab_reports"
-                                render={({ field }) => (
-                                    <FormItem className="sm:col-span-2">
-                                        <FormLabel>Lab Reports</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder="Lab report details..."
-                                                className="min-h-15"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
                         </div>
+
+                        {/* Dynamic Custom Fields from Doctor Preferences */}
+                        {casePreferencesData && casePreferencesData.length > 0 && (
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                {casePreferencesData.map((customField: DoctorField) => (
+                                    <FormField
+                                        key={customField.field_name}
+                                        control={form.control}
+                                        name={customField.field_name as any}
+                                        render={({ field }) => (
+                                            <FormItem className={customField.field_type === 'textarea' ? 'col-span-2' : ''}>
+                                                <FormLabel>
+                                                    {customField.display_name}
+                                                    {customField.is_required && <span className="text-destructive">*</span>}
+                                                </FormLabel>
+                                                <FormControl>
+                                                    {customField.field_type === 'textarea' ? (
+                                                        <Textarea
+                                                            placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                                            className="min-h-15"
+                                                            {...field}
+                                                            rows={2}
+                                                        />
+                                                    ) : (
+                                                        <Input
+                                                            placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                                            {...field}
+                                                        />
+                                                    )}
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -780,6 +768,42 @@ export function ConsultationForm({
                                         )}
                                     />
                                 </div>
+
+                                {/* Dynamic Custom Fields from Doctor Preferences */}
+                                {followupPreferencesData && followupPreferencesData.length > 0 && (
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-2">
+                                        {followupPreferencesData.map((customField: DoctorField) => (
+                                            <FormField
+                                                key={customField.field_name}
+                                                control={form.control}
+                                                name={customField.field_name as any}
+                                                render={({ field }) => (
+                                                    <FormItem className={customField.field_type === 'textarea' ? 'sm:col-span-2' : ''}>
+                                                        <FormLabel>
+                                                            {customField.display_name}
+                                                            {customField.is_required && <span className="text-destructive">*</span>}
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            {customField.field_type === 'textarea' ? (
+                                                                <Textarea
+                                                                    placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                                                    className="min-h-15"
+                                                                    {...field}
+                                                                />
+                                                            ) : (
+                                                                <Input
+                                                                    placeholder={`Enter ${customField.display_name.toLowerCase()}`}
+                                                                    {...field}
+                                                                />
+                                                            )}
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </CardContent>
                         )}
                     </Card>
