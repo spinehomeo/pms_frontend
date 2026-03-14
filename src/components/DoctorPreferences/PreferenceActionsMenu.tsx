@@ -8,7 +8,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -26,8 +25,8 @@ const PreferenceActionsMenu = ({ field, formType = "cases" }: PreferenceActionsM
     const [showDelete, setShowDelete] = useState(false)
 
     const isCustomField = field.is_custom === true
-    const isMandatoryField = 
-        field.field_name === "chief_complaint_patient" || 
+    const isMandatoryField =
+        field.field_name === "chief_complaint_patient" ||
         field.field_name === "chief_complaint_duration"
 
     const toggleMutation = useMutation({

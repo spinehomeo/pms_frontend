@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
+import { useFieldArray, useForm, type UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
 import { EnumsService, MedicinesService, OnsiteConsultationService, DoctorPreferencesService } from "@/client"
@@ -97,7 +97,7 @@ const consultationBaseSchema = z.object({
     // Follow-up fields
     next_follow_up_date: z.string().optional(),
     interval_days: z.coerce.number().min(1).optional(),
-}).catchall(z.string().optional()) // Allow optional custom fields from doctor preferences
+}).catchall(z.unknown()) // Allow optional custom fields from doctor preferences
 
 const consultationSchema = consultationBaseSchema
     .refine(
@@ -132,7 +132,7 @@ const consultationSchema = consultationBaseSchema
         },
     )
 
-type ConsultationFormData = z.infer<typeof consultationBaseSchema>
+type ConsultationFormData = z.infer<typeof consultationSchema>
 
 // ============================================================================
 // Component
@@ -155,7 +155,7 @@ export function ConsultationForm({
     const [showFollowUp, setShowFollowUp] = useState(false)
     const { showSuccessToast, showErrorToast } = useCustomToast()
 
-    const form = useForm<ConsultationFormData>({
+    const form: UseFormReturn<ConsultationFormData, any, ConsultationFormData> = useForm<ConsultationFormData, any, ConsultationFormData>({
         resolver: zodResolver(consultationSchema) as any,
         defaultValues: {
             consultation_type: "onsite",
@@ -194,7 +194,7 @@ export function ConsultationForm({
 
     const { fields, append, remove } = useFieldArray({
         control: form.control,
-        name: "medicines",
+        name: "medicines" as never,
     })
 
     // Fetch enum options from API
@@ -254,7 +254,7 @@ export function ConsultationForm({
             ]
             const caseCustomFields: Record<string, string> = {}
             Object.entries(data).forEach(([key, value]) => {
-                if (!standardCaseFields.includes(key) && !key.startsWith("include_") && 
+                if (!standardCaseFields.includes(key) && !key.startsWith("include_") &&
                     !key.startsWith("prescription_") && !key.startsWith("consultation_") &&
                     !key.startsWith("appointment_") && !key.startsWith("duration_") &&
                     !key.startsWith("next_follow_up_") && !key.startsWith("interval_") &&
@@ -269,7 +269,7 @@ export function ConsultationForm({
             if (data.include_follow_up) {
                 Object.entries(data).forEach(([key, value]) => {
                     if (!standardFollowupFields.includes(key) && !standardCaseFields.includes(key) &&
-                        !key.startsWith("include_") && !key.startsWith("prescription_") && 
+                        !key.startsWith("include_") && !key.startsWith("prescription_") &&
                         !key.startsWith("consultation_") && !key.startsWith("appointment_") &&
                         !key.startsWith("duration_") && key !== "medicines" && value) {
                         followupCustomFields[key] = value as string
@@ -295,6 +295,7 @@ export function ConsultationForm({
                 prescription: data.include_prescription
                     ? {
                         prescription_type: data.prescription_type!,
+                        dosage: data.instructions || data.prescription_duration!,
                         prescription_duration: data.prescription_duration!,
                         instructions: data.instructions || undefined,
                         dietary_restrictions:
@@ -500,12 +501,14 @@ export function ConsultationForm({
                                                             placeholder={`Enter ${customField.display_name.toLowerCase()}`}
                                                             className="min-h-15"
                                                             {...field}
+                                                            value={typeof field.value === "string" ? field.value : ""}
                                                             rows={2}
                                                         />
                                                     ) : (
                                                         <Input
                                                             placeholder={`Enter ${customField.display_name.toLowerCase()}`}
                                                             {...field}
+                                                            value={typeof field.value === "string" ? field.value : ""}
                                                         />
                                                     )}
                                                 </FormControl>
@@ -761,6 +764,7 @@ export function ConsultationForm({
                                                         min={1}
                                                         placeholder="30"
                                                         {...field}
+                                                        value={typeof field.value === "number" || typeof field.value === "string" ? field.value : ""}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -789,11 +793,13 @@ export function ConsultationForm({
                                                                     placeholder={`Enter ${customField.display_name.toLowerCase()}`}
                                                                     className="min-h-15"
                                                                     {...field}
+                                                                    value={typeof field.value === "string" ? field.value : ""}
                                                                 />
                                                             ) : (
                                                                 <Input
                                                                     placeholder={`Enter ${customField.display_name.toLowerCase()}`}
                                                                     {...field}
+                                                                    value={typeof field.value === "string" ? field.value : ""}
                                                                 />
                                                             )}
                                                         </FormControl>
@@ -843,7 +849,7 @@ function MedicineEntryCard({
     onRemove,
 }: {
     index: number
-    form: ReturnType<typeof useForm<ConsultationFormData>>
+    form: UseFormReturn<ConsultationFormData, any, ConsultationFormData>
     medicines: MedicinePublic[]
     repetitionOptions: { value: string; label: string }[]
     scaleOptions: { value: string; label: string }[]
